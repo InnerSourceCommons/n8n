@@ -1,0 +1,22 @@
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=false
+      - N8N_USER_MANAGEMENT_DISABLED=false
+      - N8N_PROTOCOL=http
+      - N8N_HOST=n8n.unintelligent-design.us
+      - WEBHOOK_URL=https://n8n.unintelligent-design.us/
+      - N8N_EDITOR_BASE_URL=https://n8n.unintelligent-design.us/
+      - N8N_USER_FOLDER=/home/node/.n8n
+      - DB_TYPE=sqlite
+      - DB_SQLITE_DATABASE=/home/node/.n8n/database.sqlite
+      - TZ=America/Los_Angeles
+    volumes:
+      - n8n_data:/home/node/.n8n
+
+volumes:
+  n8n_data:

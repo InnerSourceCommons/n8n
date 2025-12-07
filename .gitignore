@@ -1,0 +1,28 @@
+# Cloudflare Tunnel configuration (contains tunnel-specific credentials path)
+config.yml
+
+# Cloudflared credentials directory
+.cloudflared/
+
+# Environment-specific files
+.env
+.env.local
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Editor-specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Docker volumes and data
+n8n_data/
+
+# Temporary files
+*.tmp
+*.log
+

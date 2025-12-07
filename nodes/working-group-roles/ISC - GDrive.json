@@ -1,0 +1,286 @@
+{
+  "name": "ISC - GDrive",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "02cdc6bb-7a83-4a98-a01a-932879edb0b9",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        608,
+        -176
+      ],
+      "notes": "Starts the workflow manually."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "root-folder-id",
+              "name": "rootFolderId",
+              "value": "1bUftTwtzkq1AQyr3HFlivPV-FwmQ2UH7",
+              "type": "string"
+            },
+            {
+              "id": "desired-structure",
+              "name": "desiredStructure",
+              "value": "=[\n  {\n    name: '00 – Governance',\n    children: [\n      { name: 'Charter' },\n      { name: 'Roles & Responsibilities' },\n      { name: 'Contribution Model' },\n      { name: 'Style Guide' },\n      { name: 'Workflow – Google Drive to GitHub' },\n      { name: 'Naming Conventions' },\n      { name: 'Review Process' },\n      { name: 'Meetings & Decisions Register' },\n      { name: 'Permissions Model' }\n    ]\n  },\n  {\n    name: '01 – Working Groups',\n    children: [\n      {\n        name: 'WG – Documentation',\n        children: [\n          { name: 'Charter' },\n          { name: 'Notes' },\n          { name: 'Drafts' },\n          { name: 'Final Deliverables' },\n          { name: 'Research & References' }\n        ]\n      },\n      {\n        name: 'WG – Community Onboarding',\n        children: [\n          { name: 'Charter' },\n          { name: 'Notes' },\n          { name: 'Drafts' },\n          { name: 'Final Deliverables' },\n          { name: 'Research & References' }\n        ]\n      },\n      {\n        name: 'WG – Software Patterns',\n        children: [\n          { name: 'Charter' },\n          { name: 'Notes' },\n          { name: 'Drafts' },\n          { name: 'Final Deliverables' },\n          { name: 'Research & References' }\n        ]\n      },\n      {\n        name: 'WG – Case Studies',\n        children: [\n          { name: 'Charter' },\n          { name: 'Notes' },\n          { name: 'Drafts' },\n          { name: 'Final Deliverables' },\n          { name: 'Research & References' }\n        ]\n      },\n      {\n        name: 'WG – Training Materials',\n        children: [\n          { name: 'Charter' },\n          { name: 'Notes' },\n          { name: 'Drafts' },\n          { name: 'Final Deliverables' },\n          { name: 'Research & References' }\n        ]\n      },\n      {\n        name: 'WG – Tooling & Automation',\n        children: [\n          { name: 'Charter' },\n          { name: 'Notes' },\n          { name: 'Drafts' },\n          { name: 'Final Deliverables' },\n          { name: 'Research & References' }\n        ]\n      }\n    ]\n  },\n  {\n    name: '02 – Public Collaboration',\n    children: [\n      { name: 'RFCs (Requests for Comment)' },\n      { name: 'Ideas, Proposals, Brainstorms' },\n      { name: 'Backlog – Proposed Projects' },\n      { name: 'Community Submissions' },\n      { name: 'Research & Source Material' }\n    ]\n  },\n  {\n    name: '03 – Drafts & Work-in-Progress',\n    children: [\n      { name: 'Articles in Development' },\n      { name: 'Patterns in Development' },\n      { name: 'Case Studies in Development' },\n      { name: 'Training Modules Drafts' },\n      { name: 'Editorial Review Pipeline' },\n      { name: 'Ready for Migration to GitHub' }\n    ]\n  },\n  {\n    name: '04 – Published (To GitHub)',\n    children: [\n      { name: 'Patterns' },\n      { name: 'Articles' },\n      { name: 'Case Studies' },\n      { name: 'Onboarding Materials' },\n      { name: 'Tooling Guides' },\n      { name: 'Governance Docs' },\n      { name: 'Images & Diagrams' }\n    ]\n  },\n  {\n    name: '05 – Assets & Templates',\n    children: [\n      {\n        name: 'Templates',\n        children: [\n          { name: 'Pattern Template' },\n          { name: 'Case Study Template' },\n          { name: 'Editorial Review Checklist' },\n          { name: 'Working Group Charter Template' },\n          { name: 'Governance Doc Template' },\n          { name: 'Social Media Share Image Template' }\n        ]\n      },\n      {\n        name: 'Brand & Visuals',\n        children: [\n          { name: 'Logos' },\n          { name: 'Color Guides' },\n          { name: 'Diagrams' }\n        ]\n      }\n    ]\n  },\n  {\n    name: '06 – Community & Meetings',\n    children: [\n      { name: 'Meeting Notes (All WGs)' },\n      { name: 'General Meetings & Town Halls' },\n      { name: 'Attendance Records' },\n      { name: 'Slides (Shared Presentations)' },\n      { name: 'Workshop Materials' },\n      { name: 'Volunteer Onboarding' }\n    ]\n  },\n  {\n    name: '07 – Outreach & Education',\n    children: [\n      { name: 'Social Posts' },\n      { name: 'Conference Talks' },\n      { name: 'Webinars' },\n      { name: 'Training Decks' },\n      { name: 'Case Study Videos (Raw)' },\n      { name: 'Media Requests & Press' }\n    ]\n  },\n  {\n    name: '08 – Archives',\n    children: [\n      { name: '2025' },\n      { name: '2026' }\n    ]\n  }\n]",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        832,
+        -176
+      ],
+      "id": "0ade6152-0727-4f1a-b3ac-32fdc2aee73f",
+      "name": "Set Configuration",
+      "notes": "Sets the root folder ID and desired folder structure."
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/drive/v3/files",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "mimeType = 'application/vnd.google-apps.folder' and trashed = false"
+            },
+            {
+              "name": "fields",
+              "value": "files(id,name,parents)"
+            },
+            {
+              "name": "includeItemsFromAllDrives",
+              "value": "true"
+            },
+            {
+              "name": "supportsAllDrives",
+              "value": "true"
+            },
+            {
+              "name": "pageSize",
+              "value": "1000"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1056,
+        -176
+      ],
+      "id": "18cdb916-f3a8-4e0c-ba35-d88e9bfed9d3",
+      "name": "Get All Folders",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "oc5qwSQ1WBDi4XNu",
+          "name": "Google Drive account"
+        }
+      },
+      "notes": "Gets all folders accessible to the account (across drives). Build Actual Structure will filter this to only the subtree rooted at rootFolderId."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build hierarchical structure from flat list of folders\n// Convert Google Drive folder structure to JSON matching the desired structure format\n\nconst rootFolderId = $('Set Configuration').first().json.rootFolderId;\nconst allFolders = $json.files || [];\n\nconsole.log('Total folders found in Google Drive:', allFolders.length);\n\n// Build a map: parentId -> [children]\nconst childrenMap = new Map();\nfor (const folder of allFolders) {\n  const parentId = folder.parents && folder.parents.length > 0 ? folder.parents[0] : rootFolderId;\n  if (!childrenMap.has(parentId)) {\n    childrenMap.set(parentId, []);\n  }\n  childrenMap.get(parentId).push({\n    id: folder.id,\n    name: folder.name\n  });\n}\n\nconsole.log('Folders directly under root:', childrenMap.get(rootFolderId)?.length || 0);\n\n// Build tree structure starting directly from rootFolderId\n// Function to recursively build tree structure\nfunction buildTree(parentId) {\n  const children = childrenMap.get(parentId) || [];\n  return children.map(child => {\n    const node = { name: child.name };\n    const childChildren = buildTree(child.id);\n    if (childChildren.length > 0) {\n      node.children = childChildren;\n    }\n    return node;\n  });\n}\n\n// Build tree starting from rootFolderId (which is now a folder, not a drive root)\nconst actualStructure = buildTree(rootFolderId);\n\nconsole.log('Actual structure built:', JSON.stringify(actualStructure, null, 2));\n\nreturn [{ json: { actualStructure, allFolders } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1280,
+        -176
+      ],
+      "id": "8d6fe05c-6fb6-4bce-bad4-e7a001613043",
+      "name": "Build Actual Structure",
+      "notes": "Converts the flat list of folders from Google Drive into a hierarchical JSON structure matching the desired format."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Compare desired structure with actual structure\n// Include ALL folders with exists: true/false field\n\nconst desiredStructure = typeof $('Set Configuration').first().json.desiredStructure === 'string'\n  ? eval($('Set Configuration').first().json.desiredStructure)\n  : $('Set Configuration').first().json.desiredStructure;\n\nconst actualStructure = $json.actualStructure || [];\n\nconsole.log('Desired structure:', JSON.stringify(desiredStructure, null, 2));\nconsole.log('Actual structure:', JSON.stringify(actualStructure, null, 2));\n\n// Build a lookup map: parentName -> Map<childName, exists>\n// This allows us to check if a folder exists by its name and parent context\nfunction buildNameMap(structure, parentName = null) {\n  const nameMap = new Map(); // parentName -> Set<childNames>\n  \n  function processNode(node, parent) {\n    const parentKey = parent || 'ROOT';\n    if (!nameMap.has(parentKey)) {\n      nameMap.set(parentKey, new Set());\n    }\n    nameMap.get(parentKey).add(node.name);\n    \n    if (node.children && node.children.length > 0) {\n      for (const child of node.children) {\n        processNode(child, node.name);\n      }\n    }\n  }\n  \n  for (const node of structure) {\n    processNode(node, null);\n  }\n  \n  return nameMap;\n}\n\nconst actualNameMap = buildNameMap(actualStructure);\n\nconsole.log('Actual name map:', JSON.stringify(\n  Array.from(actualNameMap.entries()).map(([k, v]) => [k, Array.from(v)]),\n  null, 2\n));\n\n// Function to check if a folder exists by name and parent\nfunction folderExists(folderName, parentName = null) {\n  const parentKey = parentName || 'ROOT';\n  const exists = actualNameMap.has(parentKey) && actualNameMap.get(parentKey).has(folderName);\n  \n  // Debug: log what we're checking\n  if (!exists) {\n    console.log(`  Folder NOT found: name=\"${folderName}\", parent=\"${parentKey}\"`);\n    if (actualNameMap.has(parentKey)) {\n      console.log(`  Available children in ${parentKey}:`, Array.from(actualNameMap.get(parentKey)));\n    } else {\n      console.log(`  Parent ${parentKey} not found in actual structure`);\n    }\n  } else {\n    console.log(`  ✓ Folder found: name=\"${folderName}\", parent=\"${parentKey}\"`);\n  }\n  \n  return exists;\n}\n\n// Function to recursively check folders and add exists field\nfunction checkFolders(desiredNode, parentName = null) {\n  const exists = folderExists(desiredNode.name, parentName);\n  \n  console.log(`Checking folder: ${desiredNode.name}, parent: ${parentName || 'ROOT'}, exists: ${exists}`);\n  \n  const result = {\n    name: desiredNode.name,\n    exists: exists\n  };\n  \n  // Check children - always include all children\n  if (desiredNode.children && desiredNode.children.length > 0) {\n    result.children = desiredNode.children.map(child => \n      checkFolders(child, desiredNode.name)\n    );\n  }\n  \n  return result;\n}\n\n// Check all folders\nconst folderStatus = desiredStructure.map(node => checkFolders(node));\n\nconsole.log('Folder status:', JSON.stringify(folderStatus, null, 2));\n\nreturn [{ json: { folders: folderStatus } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1504,
+        -176
+      ],
+      "id": "6df58080-fb42-48a5-929b-1547bc0bd7dc",
+      "name": "Set Missing Folders",
+      "notes": "Compares desired structure with actual Google Drive structure and outputs exists flags for all folders."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Flatten structure and produce a list of folders to create for THIS run.\n// - Only output folders where `exists === false` AND the parent already exists.\n// - Compute parentFolderId from the current Drive state (Build Actual Structure).\n//\n// On first run: only top-level folders are created.\n// On second run: their children are created.\n// On third run: grandchildren, etc.\n//\n// You keep running the workflow until it logs \"0 folders to create\".\n\n// --- CONFIG & INPUT ---\n\nconst rootFolderId = $('Set Configuration').first().json.rootFolderId;\nconst mainFolderId = rootFolderId;\n\nconsole.log('Using rootFolderId as mainFolderId:', mainFolderId);\n\n// This comes from \"Set Missing Folders\"\nconst folderStatusTree = $json.folders || [];\n\n// From \"Build Actual Structure\" (current Drive state)\nconst actualStructure = $('Build Actual Structure').first().json.actualStructure || [];\nconst allFolders = $('Build Actual Structure').first().json.allFolders || [];\n\nconsole.log('Actual structure nodes:', actualStructure.length);\nconsole.log('Total folders in allFolders:', allFolders.length);\n\n// --- BUILD path -> folderId MAP FROM CURRENT DRIVE STATE ---\n\n// We'll reconstruct full paths like \"00 – Governance/Charter\"\nconst pathToId = new Map();\n\nfunction buildPathMap(structure, parentPath = '', parentId = mainFolderId) {\n  for (const node of structure) {\n    const currentPath = parentPath ? `${parentPath}/${node.name}` : node.name;\n\n    // Find the matching folder from allFolders by name + parentId\n    const folder = allFolders.find(f => {\n      const fParentId = f.parents && f.parents.length > 0 ? f.parents[0] : rootFolderId;\n      return f.name === node.name && fParentId === parentId;\n    });\n\n    if (folder) {\n      pathToId.set(currentPath, folder.id);\n      // Recurse into children\n      if (node.children && node.children.length > 0) {\n        buildPathMap(node.children, currentPath, folder.id);\n      }\n    }\n  }\n}\n\nbuildPathMap(actualStructure);\n\nconsole.log('Existing paths in Drive:');\nfor (const [p, id] of pathToId.entries()) {\n  console.log(`  ${p} -> ${id}`);\n}\n\n// --- FLATTEN DESIRED STRUCTURE (with exists flags) ---\n// We only output folders where:\n//   - node.exists === false\n//   - the parent \"exists\" right now (either root or in pathToId / actualStructure)\n\nfunction flattenForCreation(structure, parentPath = '', parentName = null, depth = 0, parentExists = true) {\n  const result = [];\n\n  for (const node of structure) {\n    const currentPath = parentPath ? `${parentPath}/${node.name}` : node.name;\n    const thisExists = node.exists === true;\n\n    // Decide if THIS node should be created in this run\n    // Only when it doesn't exist yet, and its parent exists.\n    if (!thisExists && parentExists) {\n      let parentFolderId;\n\n      if (!parentPath) {\n        // Top-level folder under the main/root folder\n        parentFolderId = mainFolderId;\n      } else {\n        // Parent is some subfolder; look it up by its full path\n        parentFolderId = pathToId.get(parentPath) || mainFolderId;\n      }\n\n      console.log(\n        `Scheduling create: \"${currentPath}\" ` +\n        `(depth ${depth}, parentPath=\"${parentPath}\", parentFolderId=${parentFolderId})`\n      );\n\n      result.push({\n        name: node.name,\n        path: currentPath,\n        parentPath,\n        parentName,\n        depth,\n        parentFolderId,\n      });\n    } else {\n      console.log(\n        `Skipping for now: \"${currentPath}\" (exists=${thisExists}, parentExists=${parentExists})`\n      );\n    }\n\n    // Children: their parent \"exists\" if:\n    //  - this node already exists in Drive (thisExists === true), OR\n    //  - we have a path->id entry for it (i.e., it existed before this run).\n    const childParentExists = thisExists || pathToId.has(currentPath);\n\n    if (node.children && node.children.length > 0) {\n      const childResults = flattenForCreation(\n        node.children,\n        currentPath,\n        node.name,\n        depth + 1,\n        childParentExists,\n      );\n      result.push(...childResults);\n    }\n  }\n\n  return result;\n}\n\nconst flattened = flattenForCreation(folderStatusTree);\n\n// Sort by depth so parents of this batch are before children of this batch\nflattened.sort((a, b) => a.depth - b.depth);\n\nconsole.log(`\\nFound ${flattened.length} folders to create in THIS run:`);\nflattened.forEach(f =>\n  console.log(\n    `  [depth ${f.depth}] ${f.path} (parentPath=\"${f.parentPath}\", parentFolderId=${f.parentFolderId})`,\n  ),\n);\n\n// Output each folder as a separate item\nconst outputItems = flattened.map(folder => ({\n  json: {\n    ...folder,\n    mainFolderId,\n    rootFolderId,\n  },\n}));\n\nconsole.log(`\\n=== OUTPUT: Returning ${outputItems.length} items ===`);\n\nreturn outputItems;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1728,
+        -176
+      ],
+      "id": "fc1391e6-9d13-42fe-ad70-6e1c60b7d7d5",
+      "name": "Flatten Folders to Create",
+      "notes": "Flattens the structure and filters to only folders with exists == false. Sorts by depth so parents are created before children."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.googleapis.com/drive/v3/files",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "supportsAllDrives",
+              "value": "true"
+            },
+            {
+              "name": "includeItemsFromAllDrives",
+              "value": "true"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  name: $json.name,\n  mimeType: 'application/vnd.google-apps.folder',\n  parents: [$json.parentFolderId]\n} }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1936,
+        -176
+      ],
+      "id": "0a603fb8-56eb-44b5-b5d9-245fc3b7b382",
+      "name": "Create Folder",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "oc5qwSQ1WBDi4XNu",
+          "name": "Google Drive account"
+        }
+      },
+      "notes": "Creates a folder in Google Drive using the Google Drive API. Includes shared drive parameters to ensure folders are created in the shared drive, not My Drive."
+    },
+    {
+      "parameters": {
+        "content": "## Workflow Overview\n\nThis workflow creates a hierarchical folder structure in Google Drive by comparing a desired structure definition with the current Drive state.\n\n**How it works:**\n1. Fetches all folders from Google Drive and builds a hierarchical tree\n2. Compares desired structure with actual structure, marking each folder with `exists: true/false`\n3. Identifies folders to create: only those where `exists === false` AND their parent already exists\n4. Creates folders in batches (run multiple times until all folders are created)\n\n**Usage:** Run the workflow repeatedly until it logs \"0 folders to create\" - this ensures parents are created before children.",
+        "height": 544,
+        "width": 272
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        272,
+        -416
+      ],
+      "typeVersion": 1,
+      "id": "11d96f7e-a1a0-476a-94a4-d0f1f8466914",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Configuration": {
+      "main": [
+        [
+          {
+            "node": "Get All Folders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get All Folders": {
+      "main": [
+        [
+          {
+            "node": "Build Actual Structure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Actual Structure": {
+      "main": [
+        [
+          {
+            "node": "Set Missing Folders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Missing Folders": {
+      "main": [
+        [
+          {
+            "node": "Flatten Folders to Create",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Flatten Folders to Create": {
+      "main": [
+        [
+          {
+            "node": "Create Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "577a8958-c527-4812-a3d4-fcce3ad76977",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c8e13a09ffa43327fd701e439b2a9b8e9a88dafc831863b024ea71f9a540b17f"
+  },
+  "id": "WCp2QrVh0aqAR9gu",
+  "tags": []
+}

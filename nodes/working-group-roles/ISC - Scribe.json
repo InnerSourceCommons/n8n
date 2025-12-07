@@ -1,0 +1,433 @@
+{
+  "name": "ISC - Scribe",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "copy",
+        "fileId": {
+          "__rl": true,
+          "value": "1_TJQopWFtbmAJhaObVJnRS60Lsr6VHyw1ytwhZwrU6U",
+          "mode": "list",
+          "cachedResultName": "ISPO Working Group Meeting - 2025 - MM - DD",
+          "cachedResultUrl": "https://docs.google.com/document/d/1_TJQopWFtbmAJhaObVJnRS60Lsr6VHyw1ytwhZwrU6U/edit?usp=drivesdk"
+        },
+        "name": "=ISPO Working Group Meeting - {{ $('Template Fields').item.json.year }} - {{ $('Template Fields').item.json.month }} - {{ $('Template Fields').item.json.day }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        432,
+        16
+      ],
+      "id": "2be38349-555c-4bd2-8ad3-ca80cb6fe50d",
+      "name": "Copy file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "oc5qwSQ1WBDi4XNu",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -832,
+        16
+      ],
+      "id": "68a28d67-7237-40b0-abc7-53b4d8c574e2",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "={{ $json.id }}",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "replaceAll",
+              "text": "MMMM D, YYYY",
+              "replaceText": "={{ $('Template Fields').item.json.longMonth }} {{ $('Template Fields').item.json.day }}, {{ $('Template Fields').item.json.year }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "[Scheduler]",
+              "replaceText": "={{ $('Template Fields').item.json.roles?.scheduler || '[Scheduler]' }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "[Sheduler]",
+              "replaceText": "={{ $('Template Fields').item.json.roles?.scribe || '[Sheduler]' }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "[Crier]",
+              "replaceText": "={{ $('Template Fields').item.json.roles?.crier || '[Crier]' }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "[Facilitator]",
+              "replaceText": "={{ $('Template Fields').item.json.roles?.facilitator || '[Facilitator]' }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "[Scribe]",
+              "replaceText": "={{ $('Template Fields').item.json.roles?.scribe || '[Scribe]' }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        656,
+        16
+      ],
+      "id": "95a7979e-13ef-44d5-9a2b-240715a82483",
+      "name": "Update a document",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "Wba16H74EezRKaMT",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1c7ffb97-dac4-4814-b5e9-8852d4f9843e",
+              "name": "day",
+              "value": "={{ String(new Date($json.body.date + 'T00:00:00Z').getUTCDate()).padStart(2, '0') }}",
+              "type": "string"
+            },
+            {
+              "id": "b9767d26-be3b-4c99-a193-9b4ffcde97a5",
+              "name": "month",
+              "value": "={{ String(new Date($json.body.date + 'T00:00:00Z').getUTCMonth() + 1).padStart(2, '0') }}",
+              "type": "string"
+            },
+            {
+              "id": "622a4e48-4042-426b-866d-9987cfb60d10",
+              "name": "year",
+              "value": "={{ new Date($json.body.date).toLocaleDateString('en-US', { timeZone: 'UTC', year: 'numeric' }) }}",
+              "type": "string"
+            },
+            {
+              "id": "342a42a6-1404-4c74-9029-cddcc80ae189",
+              "name": "date",
+              "value": "={{ $json.body.date }}",
+              "type": "string"
+            },
+            {
+              "id": "aa1add67-9623-4343-b357-721fc21b5d51",
+              "name": "longMonth",
+              "value": "={{ new Date($json.body.date).toLocaleDateString('en-US', { timeZone: 'UTC', month: 'long' }) }}",
+              "type": "string"
+            },
+            {
+              "id": "should-overwrite-file",
+              "name": "should_overwrite_file",
+              "value": "={{ $json.body.should_overwrite_file || false }}",
+              "type": "boolean"
+            },
+            {
+              "id": "roles-extract",
+              "name": "roles",
+              "value": "={{ $json.body?.roles || null }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -608,
+        16
+      ],
+      "id": "b5a40cb4-c812-4282-9475-18df2c9f49bd",
+      "name": "Template Fields"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        -384,
+        16
+      ],
+      "id": "bf644b04-7316-448a-b93e-4a4561464eb6",
+      "name": "Limit to 1 item"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "filename-assignment",
+              "name": "filename",
+              "value": "=ISPO Working Group Meeting - {{ $json.year }} - {{ $json.month }} - {{ $json.day }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -160,
+        16
+      ],
+      "id": "bced3745-576f-4a8b-87d8-19cff2e848c4",
+      "name": "Set filename"
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/drive/v3/files",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ \"name contains '\" + $json.filename + \"' and trashed=false\" }}"
+            },
+            {
+              "name": "fields",
+              "value": "files(id, name, trashed)"
+            },
+            {
+              "name": "pageSize",
+              "value": "10"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        48,
+        16
+      ],
+      "id": "f2cdcb73-aa47-4539-b9f3-4d76b0e13a78",
+      "name": "Search for file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "oc5qwSQ1WBDi4XNu",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "file-exists-check",
+              "leftValue": "={{ $json.files.filter(f => f.name == $('Set filename').item.json.filename && !f.trashed).length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "should-overwrite-check",
+              "leftValue": "={{ $('Template Fields').item.json.should_overwrite_file }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        272,
+        16
+      ],
+      "id": "dee0e613-f441-4dc7-9e75-a2a2e3ed7004",
+      "name": "If file does not exist"
+    },
+    {
+      "parameters": {
+        "errorMessage": "Duplicate file exists"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        496,
+        224
+      ],
+      "id": "296f092f-077d-4505-abf9-99d4f0e5b132",
+      "name": "Stop if file exists"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "isc-scribe",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -832,
+        272
+      ],
+      "id": "c23ec0fc-2792-4789-8370-0f14c5260f5a",
+      "name": "Webhook",
+      "webhookId": "62131315-3203-4e26-bcbc-116597cf73bd"
+    }
+  ],
+  "pinData": {
+    "When clicking ‘Execute workflow’": [
+      {
+        "json": {
+          "body": {
+            "date": "2025-12-01",
+            "should_overwrite_file": true,
+            "roles": {
+              "scheduler": "Scheduler Role",
+              "crier": "Crier Role",
+              "facilitator": "Facilitator Role",
+              "scribe": "Scribe Role"
+            }
+          }
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Copy file": {
+      "main": [
+        [
+          {
+            "node": "Update a document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Template Fields": {
+      "main": [
+        [
+          {
+            "node": "Limit to 1 item",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit to 1 item": {
+      "main": [
+        [
+          {
+            "node": "Set filename",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set filename": {
+      "main": [
+        [
+          {
+            "node": "Search for file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search for file": {
+      "main": [
+        [
+          {
+            "node": "If file does not exist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If file does not exist": {
+      "main": [
+        [
+          {
+            "node": "Copy file",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop if file exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Template Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Template Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "111b432f-b6e9-4c14-bf06-09820326f924",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c8e13a09ffa43327fd701e439b2a9b8e9a88dafc831863b024ea71f9a540b17f"
+  },
+  "id": "JnyLQbXbFCyiINGJ",
+  "tags": []
+}

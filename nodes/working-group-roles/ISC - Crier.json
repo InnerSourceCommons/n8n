@@ -1,0 +1,296 @@
+{
+  "name": "ISC - Crier",
+  "nodes": [
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "={{ $json.query.channel }}",
+          "mode": "name"
+        },
+        "messageType": "block",
+        "blocksUi": "={\n\t\"blocks\": [\n\t\t{\n\t\t\t\"type\": \"section\",\n\t\t\t\"text\": {\n\t\t\t\t\"type\": \"mrkdwn\",\n\t\t\t\t\"text\": \"<!here> Reminder: ISPO Working Group call happens {{ $json.weekday }} at {{ $json.query.time }} UTC :tada:\\n\\nThis is an excellent meeting for newcomers looking to learn about InnerSource. All are welcome to join!\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"type\": \"divider\"\n\t\t},\n\t\t{\n\t\t\t\"type\": \"section\",\n\t\t\t\"text\": {\n\t\t\t\t\"type\": \"mrkdwn\",\n\t\t\t\t\"text\": \"*This meeting's topic:*\\n\\n{{ $json.topic }}\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"type\": \"divider\"\n\t\t},\n\t\t{\n\t\t\t\"type\": \"section\",\n\t\t\t\"fields\": [\n\t\t\t\t{\n\t\t\t\t\t\"type\": \"mrkdwn\",\n\t\t\t\t\t\"text\": \":spiral_calendar_pad: *Date:*\\n{{ $json.weekday }}, {{ $json.monthName }} {{ $json.dayOrdinal }}\"\n\t\t\t\t},\n\t\t\t\t{\n\t\t\t\t\t\"type\": \"mrkdwn\",\n\t\t\t\t\t\"text\": \":alarm_clock: *Time:*\\nMultiple time zones below\"\n\t\t\t\t}\n\t\t\t]\n\t\t},\n\t\t{\n\t\t\t\"type\": \"section\",\n\t\t\t\"text\": {\n\t\t\t\t\"type\": \"mrkdwn\",\n\t\t\t\t\"text\": \"*Time Zones:*\\n• 8:00 AM PST (Pacific Standard Time)\\n• 9:00 AM PDT (Pacific Daylight Time)\\n• 11:00 AM EST (Eastern Standard Time)\\n• 4:00 PM BST (British Summer Time)\\n• 5:00 PM CEST (Central European Summer Time)\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"type\": \"divider\"\n\t\t},\n\t\t{\n\t\t\t\"type\": \"section\",\n\t\t\t\"text\": {\n\t\t\t\t\"type\": \"mrkdwn\",\n\t\t\t\t\"text\": \":link: <https://docs.google.com/document/d/1ZSYjKft1eWZMuGp0UiBXWNvx654_lWIL_zH662UivPE/edit?usp=sharing|Meeting Notes>\\n:link: <https://innersourcecommons.org/calendar/|InnerSource Commons Calendar>\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"type\": \"actions\",\n\t\t\t\"elements\": [\n\t\t\t\t{\n\t\t\t\t\t\"type\": \"button\",\n\t\t\t\t\t\"text\": {\n\t\t\t\t\t\t\"type\": \"plain_text\",\n\t\t\t\t\t\t\"text\": \"Join Meeting\",\n\t\t\t\t\t\t\"emoji\": true\n\t\t\t\t\t},\n\t\t\t\t\t\"url\": \"https://us06web.zoom.us/j/84987611486?pwd=Biw6cc9UwWI6FrM51Ugox10sClIP6n.1\",\n\t\t\t\t\t\"style\": \"primary\"\n\t\t\t\t}\n\t\t\t]\n\t\t}\n\t]\n}",
+        "text": "=",
+        "otherOptions": {
+          "includeLinkToWorkflow": "={{ false }}",
+          "link_names": "={{ false }}",
+          "unfurl_links": "={{ false }}",
+          "unfurl_media": "={{ false }}"
+        }
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        1296,
+        176
+      ],
+      "id": "fb7b7674-20c3-4d11-b626-fb26f5055e8a",
+      "name": "Send a message",
+      "webhookId": "a98506f5-5fff-49f7-acfe-9faab97fe78e",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "rGcyfyZoWicZQHjw",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        400,
+        176
+      ],
+      "id": "5d3942c5-d226-4ff1-a3c4-32f0600e4f93",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "prepare-utc-date",
+              "name": "utcDate",
+              "value": "={{\n  (() => {\n    let dateStr = $json.query.date;\n    let timeStr = $json.query.time;\n    \n    // Extract date part if it includes time\n    if (dateStr.includes('T')) {\n      dateStr = dateStr.split('T')[0];\n    }\n    \n    // Normalize time string to HH:MM:SS format\n    const timeParts = timeStr.split(':');\n    if (timeParts.length === 2) {\n      timeStr = timeStr + ':00';\n    }\n    \n    // Create ISO 8601 UTC datetime string\n    return dateStr + 'T' + timeStr + 'Z';\n  })()\n}}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        848,
+        176
+      ],
+      "id": "prepare-utc-date-node",
+      "name": "Prepare UTC Date"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ee13ed18-58d4-4904-bd27-dc6063af8658",
+              "name": "topic",
+              "value": "={{ $json.query.topic }}",
+              "type": "string"
+            },
+            {
+              "id": "a25c1a86-f313-47d3-890c-a69e276d177d",
+              "name": "weekday",
+              "value": "={{\n  (() => {\n    const utcDate = new Date($json.utcDate);\n    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];\n    return dayNames[utcDate.getUTCDay()];\n  })()\n}}",
+              "type": "string"
+            },
+            {
+              "id": "03d27bc9-fc80-4297-a2bd-4df85aa2ec85",
+              "name": "dayOrdinal",
+              "value": "={{\n  (() => {\n    const utcDate = new Date($json.utcDate);\n    const d = utcDate.getUTCDate();\n    const j = d % 10;\n    const k = d % 100;\n\n    let s = 'th';\n    if (k !== 11 && k !== 12 && k !== 13) {\n      if (j === 1) s = 'st';\n      else if (j === 2) s = 'nd';\n      else if (j === 3) s = 'rd';\n    }\n\n    return String(d) + s;\n  })()\n}}",
+              "type": "string"
+            },
+            {
+              "id": "d50d03a9-d0ea-4e6a-8c15-f6684eaac8ed",
+              "name": "monthName",
+              "value": "={{\n  (() => {\n    const utcDate = new Date($json.utcDate);\n    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];\n    return monthNames[utcDate.getUTCMonth()];\n  })()\n}}",
+              "type": "string"
+            },
+            {
+              "id": "f34837b3-ac4b-478e-908b-08041e85de34",
+              "name": "",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": "={{ $json.query.channel }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1072,
+        176
+      ],
+      "id": "522d6ea4-6946-4a22-83f0-a6f3e1f74267",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "path": "ispo-working-group/crier",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        400,
+        368
+      ],
+      "id": "4a632018-27cd-4cca-ac10-039a67e15436",
+      "name": "Webhook",
+      "webhookId": "0ce14788-827f-4d45-bb3d-b19bac30bfb7"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "date-check",
+              "leftValue": "={{ $json.query.date }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "isNotEmpty"
+              }
+            },
+            {
+              "id": "time-check",
+              "leftValue": "={{ $json.query.time }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "isNotEmpty"
+              }
+            },
+            {
+              "id": "397c8e21-59ce-44b4-8a3d-ec1c26b66cbe",
+              "leftValue": "={{ !$json.query.time || !$json.query.date}}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        624,
+        272
+      ],
+      "id": "f0eac417-994b-4858-806e-ad336323294e",
+      "name": "Validate date and time"
+    },
+    {
+      "parameters": {
+        "errorMessage": "Both 'date' and 'time' query parameters are required. Please provide UTC date (e.g., '2024-11-23') and UTC time (e.g., '16:00:00')."
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        848,
+        368
+      ],
+      "id": "df72f29e-8492-4e66-aac4-ca037a2437fb",
+      "name": "Stop on error"
+    }
+  ],
+  "pinData": {
+    "When clicking ‘Execute workflow’": [
+      {
+        "json": {
+          "query": {
+            "date": "2025-11-23",
+            "time": "00:00",
+            "topic": "What are you working on with InnerSource at your company right now?",
+            "channel": "jeff-testing"
+          }
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate date and time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate date and time": {
+      "main": [
+        [
+          {
+            "node": "Prepare UTC Date",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop on error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare UTC Date": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Validate date and time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "5eae0b0d-1e53-4015-ba6d-00d8ae5dab0c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9af121620be429db15d8dcc0e1e458f1d7ecb1241017b9a35d03300b3a8224c4"
+  },
+  "id": "TGkroB517Qmk92QB",
+  "tags": []
+}

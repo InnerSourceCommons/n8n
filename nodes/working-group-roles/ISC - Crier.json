@@ -11,7 +11,7 @@
           "mode": "name"
         },
         "messageType": "block",
-        "blocksUi": "={\n\t\"blocks\": [\n\t\t{\n\t\t\t\"type\": \"section\",\n\t\t\t\"text\": {\n\t\t\t\t\"type\": \"mrkdwn\",\n\t\t\t\t\"text\": \"<!here> Reminder: ISPO Working Group call happens {{ $json.weekday }} at {{ $json.query.time }} UTC :tada:\\n\\nThis is an excellent meeting for newcomers looking to learn about InnerSource. All are welcome to join!\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"type\": \"divider\"\n\t\t},\n\t\t{\n\t\t\t\"type\": \"section\",\n\t\t\t\"text\": {\n\t\t\t\t\"type\": \"mrkdwn\",\n\t\t\t\t\"text\": \"*This meeting's topic:*\\n\\n{{ $json.topic }}\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"type\": \"divider\"\n\t\t},\n\t\t{\n\t\t\t\"type\": \"section\",\n\t\t\t\"fields\": [\n\t\t\t\t{\n\t\t\t\t\t\"type\": \"mrkdwn\",\n\t\t\t\t\t\"text\": \":spiral_calendar_pad: *Date:*\\n{{ $json.weekday }}, {{ $json.monthName }} {{ $json.dayOrdinal }}\"\n\t\t\t\t},\n\t\t\t\t{\n\t\t\t\t\t\"type\": \"mrkdwn\",\n\t\t\t\t\t\"text\": \":alarm_clock: *Time:*\\nMultiple time zones below\"\n\t\t\t\t}\n\t\t\t]\n\t\t},\n\t\t{\n\t\t\t\"type\": \"section\",\n\t\t\t\"text\": {\n\t\t\t\t\"type\": \"mrkdwn\",\n\t\t\t\t\"text\": \"*Time Zones:*\\n• 8:00 AM PST (Pacific Standard Time)\\n• 9:00 AM PDT (Pacific Daylight Time)\\n• 11:00 AM EST (Eastern Standard Time)\\n• 4:00 PM BST (British Summer Time)\\n• 5:00 PM CEST (Central European Summer Time)\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"type\": \"divider\"\n\t\t},\n\t\t{\n\t\t\t\"type\": \"section\",\n\t\t\t\"text\": {\n\t\t\t\t\"type\": \"mrkdwn\",\n\t\t\t\t\"text\": \":link: <https://drive.google.com/drive/u/0/folders/1vFJPuQ5l0hKIlC58qjdV1MNSIhdoSBCz?ths=true|Meeting Notes>\\n:link: <https://innersourcecommons.org/calendar/|InnerSource Commons Calendar>\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"type\": \"actions\",\n\t\t\t\"elements\": [\n\t\t\t\t{\n\t\t\t\t\t\"type\": \"button\",\n\t\t\t\t\t\"text\": {\n\t\t\t\t\t\t\"type\": \"plain_text\",\n\t\t\t\t\t\t\"text\": \"Join Meeting\",\n\t\t\t\t\t\t\"emoji\": true\n\t\t\t\t\t},\n\t\t\t\t\t\"url\": \"https://us06web.zoom.us/j/84987611486?pwd=Biw6cc9UwWI6FrM51Ugox10sClIP6n.1\",\n\t\t\t\t\t\"style\": \"primary\"\n\t\t\t\t}\n\t\t\t]\n\t\t}\n\t]\n}",
+        "blocksUi": "={\n\t\"blocks\": [\n\t\t{\n\t\t\t\"type\": \"section\",\n\t\t\t\"text\": {\n\t\t\t\t\"type\": \"mrkdwn\",\n\t\t\t\t\"text\": \"<!here> Reminder: ISPO Working Group call happens {{ $json.utcDate.dayofweekname }} at {{ $json.query.time }} UTC :tada:\\n\\nThis is an excellent meeting for newcomers looking to learn about InnerSource. All are welcome to join!\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"type\": \"divider\"\n\t\t},\n\t\t{\n\t\t\t\"type\": \"section\",\n\t\t\t\"text\": {\n\t\t\t\t\"type\": \"mrkdwn\",\n\t\t\t\t\"text\": \"*This meeting's topic:*\\n\\n{{ $json.query.topic }}\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"type\": \"divider\"\n\t\t},\n\t\t{\n\t\t\t\"type\": \"section\",\n\t\t\t\"fields\": [\n\t\t\t\t{\n\t\t\t\t\t\"type\": \"mrkdwn\",\n\t\t\t\t\t\"text\": \":spiral_calendar_pad: *Date:*\\n{{ $json.utcDate.dayofweekname }}, {{ $json.utcDate.monthname}} {{ $json.utcDate.ordinal }}\"\n\t\t\t\t},\n\t\t\t\t{\n\t\t\t\t\t\"type\": \"mrkdwn\",\n\t\t\t\t\t\"text\": \":alarm_clock: *Time:*\\nMultiple time zones below\"\n\t\t\t\t}\n\t\t\t]\n\t\t},\n\t\t{\n\t\t\t\"type\": \"section\",\n\t\t\t\"text\": {\n\t\t\t\t\"type\": \"mrkdwn\",\n\t\t\t\t\"text\": \"*Time Zones:*\\n• 8:00 AM PST (Pacific Standard Time)\\n• 9:00 AM PDT (Pacific Daylight Time)\\n• 11:00 AM EST (Eastern Standard Time)\\n• 4:00 PM BST (British Summer Time)\\n• 5:00 PM CEST (Central European Summer Time)\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"type\": \"divider\"\n\t\t},\n\t\t{\n\t\t\t\"type\": \"section\",\n\t\t\t\"text\": {\n\t\t\t\t\"type\": \"mrkdwn\",\n\t\t\t\t\"text\": \":link: <{{ $json.query.meeting_notes_url }}>\\n:link: <https://innersourcecommons.org/calendar/|InnerSource Commons Calendar>\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"type\": \"actions\",\n\t\t\t\"elements\": [\n\t\t\t\t{\n\t\t\t\t\t\"type\": \"button\",\n\t\t\t\t\t\"text\": {\n\t\t\t\t\t\t\"type\": \"plain_text\",\n\t\t\t\t\t\t\"text\": \"Join Meeting\",\n\t\t\t\t\t\t\"emoji\": true\n\t\t\t\t\t},\n\t\t\t\t\t\"url\": \"https://us06web.zoom.us/j/84987611486?pwd=Biw6cc9UwWI6FrM51Ugox10sClIP6n.1\",\n\t\t\t\t\t\"style\": \"primary\"\n\t\t\t\t}\n\t\t\t]\n\t\t}\n\t]\n}",
         "text": "=",
         "otherOptions": {
           "includeLinkToWorkflow": "={{ false }}",
@@ -23,10 +23,10 @@
       "type": "n8n-nodes-base.slack",
       "typeVersion": 2.3,
       "position": [
-        896,
+        1104,
         0
       ],
-      "id": "19290184-86aa-4434-a1d0-84f917c11934",
+      "id": "79e4143d-0f41-486a-8847-ed33b9f2bb90",
       "name": "Send a message",
       "webhookId": "a98506f5-5fff-49f7-acfe-9faab97fe78e",
       "credentials": {
@@ -44,7 +44,7 @@
         0,
         0
       ],
-      "id": "a0dffd31-ebfb-4b23-8399-566972a8042e",
+      "id": "fe2cbf7e-dcfb-4afa-9797-3a388441e52d",
       "name": "When clicking ‘Execute workflow’"
     },
     {
@@ -54,8 +54,8 @@
             {
               "id": "prepare-utc-date",
               "name": "utcDate",
-              "value": "={{\n  (() => {\n    let dateStr = $json.query.date;\n    let timeStr = $json.query.time;\n    \n    // Extract date part if it includes time\n    if (dateStr.includes('T')) {\n      dateStr = dateStr.split('T')[0];\n    }\n    \n    // Normalize time string to HH:MM:SS format\n    const timeParts = timeStr.split(':');\n    if (timeParts.length === 2) {\n      timeStr = timeStr + ':00';\n    }\n    \n    // Create ISO 8601 UTC datetime string\n    return dateStr + 'T' + timeStr + 'Z';\n  })()\n}}",
-              "type": "string"
+              "value": "={{\n  (() => {\n    let dateStr = $json.query.date;\n    let timeStr = $json.query.time;\n    \n    // Extract date part if it includes time\n    if (dateStr.includes('T')) {\n      dateStr = dateStr.split('T')[0];\n    }\n    \n    // Normalize time string to HH:MM:SS format\n    const timeParts = timeStr.split(':');\n    if (timeParts.length === 2) {\n      timeStr = timeStr + ':00';\n    }\n    \n    // Create ISO 8601 UTC datetime string\n    const isoDateTime = dateStr + 'T' + timeStr + 'Z';\n    \n    // Create Date object to extract parts\n    const date = new Date(isoDateTime);\n    \n    // Function to get ordinal suffix\n    const getOrdinal = (n) => {\n      const s = [\"th\", \"st\", \"nd\", \"rd\"];\n      const v = n % 100;\n      return n + (s[(v - 20) % 10] || s[v] || s[0]);\n    };\n    \n    const day = date.getUTCDate();\n    \n    // Return common date parts\n    return {\n      dayofweek: date.getUTCDay(), // 0 (Sunday) to 6 (Saturday)\n      dayofweekname: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][date.getUTCDay()],\n      day: day, // 1-31\n      ordinal: getOrdinal(day), // \"12th\", \"1st\", \"2nd\", etc.\n      month: date.getUTCMonth() + 1, // 1-12 (getUTCMonth returns 0-11)\n      monthname: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][date.getUTCMonth()],\n      year: date.getUTCFullYear(),\n      hour: date.getUTCHours(),\n      minute: date.getUTCMinutes(),\n      second: date.getUTCSeconds(),\n      isoDateTime: isoDateTime\n    };\n  })()\n}}",
+              "type": "object"
             }
           ]
         },
@@ -68,56 +68,8 @@
         448,
         0
       ],
-      "id": "3122525a-b8b2-4b34-8de6-73d4a7d4227c",
+      "id": "08bae579-9144-466f-a4e9-d4db1adeabc8",
       "name": "Prepare UTC Date"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "ee13ed18-58d4-4904-bd27-dc6063af8658",
-              "name": "topic",
-              "value": "={{ $json.query.topic }}",
-              "type": "string"
-            },
-            {
-              "id": "a25c1a86-f313-47d3-890c-a69e276d177d",
-              "name": "weekday",
-              "value": "={{\n  (() => {\n    const utcDate = new Date($json.utcDate);\n    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];\n    return dayNames[utcDate.getUTCDay()];\n  })()\n}}",
-              "type": "string"
-            },
-            {
-              "id": "03d27bc9-fc80-4297-a2bd-4df85aa2ec85",
-              "name": "dayOrdinal",
-              "value": "={{\n  (() => {\n    const utcDate = new Date($json.utcDate);\n    const d = utcDate.getUTCDate();\n    const j = d % 10;\n    const k = d % 100;\n\n    let s = 'th';\n    if (k !== 11 && k !== 12 && k !== 13) {\n      if (j === 1) s = 'st';\n      else if (j === 2) s = 'nd';\n      else if (j === 3) s = 'rd';\n    }\n\n    return String(d) + s;\n  })()\n}}",
-              "type": "string"
-            },
-            {
-              "id": "d50d03a9-d0ea-4e6a-8c15-f6684eaac8ed",
-              "name": "monthName",
-              "value": "={{\n  (() => {\n    const utcDate = new Date($json.utcDate);\n    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];\n    return monthNames[utcDate.getUTCMonth()];\n  })()\n}}",
-              "type": "string"
-            },
-            {
-              "id": "f34837b3-ac4b-478e-908b-08041e85de34",
-              "name": "",
-              "value": "",
-              "type": "string"
-            }
-          ]
-        },
-        "includeOtherFields": "={{ $json.query.channel }}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        672,
-        0
-      ],
-      "id": "82eb4676-682d-4aa9-b919-71882a9b9a50",
-      "name": "Edit Fields"
     },
     {
       "parameters": {
@@ -132,7 +84,7 @@
         0,
         192
       ],
-      "id": "c5f6b103-5be8-4182-b036-e80cee21f2ec",
+      "id": "c709f987-ea88-43d5-a342-1b51a3e485fa",
       "name": "Webhook",
       "webhookId": "0ce14788-827f-4d45-bb3d-b19bac30bfb7"
     },
@@ -185,7 +137,7 @@
         224,
         96
       ],
-      "id": "5c9d860d-6178-4146-be4a-be56418fd102",
+      "id": "55ad9ec4-0c8d-47d2-859b-7fb221669872",
       "name": "Validate date and time"
     },
     {
@@ -198,7 +150,7 @@
         448,
         192
       ],
-      "id": "7b41c2f8-bbf1-4ed9-8de2-ef4e00e3bef7",
+      "id": "742909c4-69e6-4d10-af16-d00b96b79b0a",
       "name": "Stop on error"
     }
   ],
@@ -207,27 +159,17 @@
       {
         "json": {
           "query": {
-            "date": "2025-12-15",
+            "date": "2026-01-12",
             "time": "16:00",
-            "topic": "Contributor Journey Optimization — facilitate the journey of project stakeholders in becoming contributors, https://github.com/InnerSourceCommons/ispo-working-group/issues/157",
-            "channel": "ispo-working-group"
+            "topic": "What are you working on with InnerSource at your company right now?",
+            "channel": "ispo-working-group",
+            "meeting_notes_url": "https://docs.google.com/document/d/1wCs68YlWH058GBCwqEyW5UX4hEaGdDKQwYSnLDw0SX8/edit?usp=sharing"
           }
         }
       }
     ]
   },
   "connections": {
-    "Edit Fields": {
-      "main": [
-        [
-          {
-            "node": "Send a message",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Webhook": {
       "main": [
         [
@@ -261,7 +203,7 @@
       "main": [
         [
           {
-            "node": "Edit Fields",
+            "node": "Send a message",
             "type": "main",
             "index": 0
           }
@@ -284,11 +226,10 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "077dbe6d-e464-490b-8ad2-d3ebc2769438",
+  "versionId": "b857c127-f1af-411b-842b-e5ead0cce1fe",
   "meta": {
-    "templateCredsSetupCompleted": true,
     "instanceId": "c8e13a09ffa43327fd701e439b2a9b8e9a88dafc831863b024ea71f9a540b17f"
   },
-  "id": "0cUOgYQmO91ZKOGN",
+  "id": "OoKuKHPTjTAImZrt",
   "tags": []
 }

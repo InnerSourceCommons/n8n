@@ -23,15 +23,15 @@
       "type": "n8n-nodes-base.slack",
       "typeVersion": 2.3,
       "position": [
-        1104,
-        0
+        2880,
+        192
       ],
-      "id": "79e4143d-0f41-486a-8847-ed33b9f2bb90",
+      "id": "6244d21a-031b-4eef-b2f0-919bbf6e9c8e",
       "name": "Send a message",
       "webhookId": "a98506f5-5fff-49f7-acfe-9faab97fe78e",
       "credentials": {
         "slackOAuth2Api": {
-          "id": "UChla6X5zMTanPIu",
+          "id": "EeKV8eIJlttYoJQp",
           "name": "Slack account"
         }
       }
@@ -41,10 +41,10 @@
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        0,
-        0
+        1776,
+        192
       ],
-      "id": "fe2cbf7e-dcfb-4afa-9797-3a388441e52d",
+      "id": "5275dd29-1bf2-49b2-b04c-3f7f299684ad",
       "name": "When clicking ‘Execute workflow’"
     },
     {
@@ -54,7 +54,7 @@
             {
               "id": "prepare-utc-date",
               "name": "utcDate",
-              "value": "={{\n  (() => {\n    let dateStr = $json.query.date;\n    let timeStr = $json.query.time;\n    \n    // Extract date part if it includes time\n    if (dateStr.includes('T')) {\n      dateStr = dateStr.split('T')[0];\n    }\n    \n    // Normalize time string to HH:MM:SS format\n    const timeParts = timeStr.split(':');\n    if (timeParts.length === 2) {\n      timeStr = timeStr + ':00';\n    }\n    \n    // Create ISO 8601 UTC datetime string\n    const isoDateTime = dateStr + 'T' + timeStr + 'Z';\n    \n    // Create Date object to extract parts\n    const date = new Date(isoDateTime);\n    \n    // Function to get ordinal suffix\n    const getOrdinal = (n) => {\n      const s = [\"th\", \"st\", \"nd\", \"rd\"];\n      const v = n % 100;\n      return n + (s[(v - 20) % 10] || s[v] || s[0]);\n    };\n    \n    const day = date.getUTCDate();\n    \n    // Return common date parts\n    return {\n      dayofweek: date.getUTCDay(), // 0 (Sunday) to 6 (Saturday)\n      dayofweekname: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][date.getUTCDay()],\n      day: day, // 1-31\n      ordinal: getOrdinal(day), // \"12th\", \"1st\", \"2nd\", etc.\n      month: date.getUTCMonth() + 1, // 1-12 (getUTCMonth returns 0-11)\n      monthname: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][date.getUTCMonth()],\n      year: date.getUTCFullYear(),\n      hour: date.getUTCHours(),\n      minute: date.getUTCMinutes(),\n      second: date.getUTCSeconds(),\n      isoDateTime: isoDateTime\n    };\n  })()\n}}",
+              "value": "={{\n  (() => {\n    let dateStr = $json.query.date;\n    let timeStr = $json.query.time;\n    \n    // Extract date part if it includes time\n    if (dateStr.includes('T')) {\n      dateStr = dateStr.split('T')[0];\n    }\n    \n    // Normalize time string to HH:MM:SS format\n    const timeParts = timeStr.split(':');\n    if (timeParts.length === 2) {\n      timeStr = timeStr + ':00';\n    }\n    \n    // Create ISO 8601 UTC datetime string\n    const isoDateTime = dateStr + 'T' + timeStr + 'Z';\n    \n    // Create Date object to extract parts\n    const date = new Date(isoDateTime);\n    \n    // Function to get ordinal suffix\n    const getOrdinal = (n) => {\n      const s = [\"th\", \"st\", \"nd\", \"rd\"];\n      const v = n % 100;\n      return n + (s[(v - 20) % 10] || s[v] || s[0]);\n    };\n    \n    // Format hour/minute as \"8:00 AM\" or \"4:30 PM\"\n    const formatTime12 = (h, m) => {\n      const period = h >= 12 ? 'PM' : 'AM';\n      const h12 = h % 12 || 12;\n      const mStr = (m < 10 ? '0' : '') + m;\n      return h12 + ':' + mStr + ' ' + period;\n    };\n    \n    // Given UTC timestamp and offset in hours, return formatted local time\n    const localTimeAtOffset = (utcDate, offsetHours) => {\n      const t = utcDate.getTime() + offsetHours * 60 * 60 * 1000;\n      const d = new Date(t);\n      return formatTime12(d.getUTCHours(), d.getUTCMinutes());\n    };\n    \n    const day = date.getUTCDate();\n    \n    // Timezone offsets (hours from UTC) and display names\n    const zones = [\n      { key: 'pst', offset: -8, label: 'PST (Pacific Standard Time)' },\n      { key: 'pdt', offset: -7, label: 'PDT (Pacific Daylight Time)' },\n      { key: 'est', offset: -5, label: 'EST (Eastern Standard Time)' },\n      { key: 'bst', offset: 1, label: 'BST (British Summer Time)' },\n      { key: 'cest', offset: 2, label: 'CEST (Central European Summer Time)' }\n    ];\n    \n    const timeZones = {};\n    const timeZonesLines = [];\n    for (const z of zones) {\n      const timeStr = localTimeAtOffset(date, z.offset);\n      timeZones[z.key] = timeStr;\n      timeZonesLines.push('• ' + timeStr + ' ' + z.label);\n    }\n    \n    return {\n      dayofweek: date.getUTCDay(),\n      dayofweekname: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][date.getUTCDay()],\n      day: day,\n      ordinal: getOrdinal(day),\n      month: date.getUTCMonth() + 1,\n      monthname: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][date.getUTCMonth()],\n      year: date.getUTCFullYear(),\n      hour: date.getUTCHours(),\n      minute: date.getUTCMinutes(),\n      second: date.getUTCSeconds(),\n      isoDateTime: isoDateTime,\n      timeZones: timeZones,\n      timeZonesText: timeZonesLines.join('\\n')\n    };\n  })()\n}}",
               "type": "object"
             }
           ]
@@ -65,11 +65,24 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        448,
-        0
+        2224,
+        192
       ],
-      "id": "08bae579-9144-466f-a4e9-d4db1adeabc8",
+      "id": "1dd85f91-72a0-4af5-8aab-138aac8a9cba",
       "name": "Prepare UTC Date"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst d = item.utcDate;\nconst q = item.query;\nconst blocks = {\n  blocks: [\n    { type: 'section', text: { type: 'mrkdwn', text: `<!here> Reminder: ISPO Working Group call happens ${d.dayofweekname} at ${q.time} UTC :tada:\\n\\nThis is an excellent meeting for newcomers looking to learn about InnerSource. All are welcome to join!` } },\n    { type: 'divider' },\n    { type: 'section', text: { type: 'mrkdwn', text: `*This meeting's topic:*\\n\\n${q.topic}` } },\n    { type: 'divider' },\n    { type: 'section', fields: [\n      { type: 'mrkdwn', text: `:spiral_calendar_pad: *Date:*\\n${d.dayofweekname}, ${d.monthname} ${d.ordinal}` },\n      { type: 'mrkdwn', text: ':alarm_clock: *Time:*\\nMultiple time zones below' }\n    ] },\n    { type: 'section', text: { type: 'mrkdwn', text: `*Time Zones:*\\n${d.timeZonesText}` } },\n    { type: 'divider' },\n    { type: 'section', text: { type: 'mrkdwn', text: `:link: <${q.meeting_notes_url}>\\n:link: <https://innersourcecommons.org/calendar/|InnerSource Commons Calendar>` } },\n    { type: 'actions', elements: [ { type: 'button', text: { type: 'plain_text', text: 'Join Meeting', emoji: true }, url: 'https://us06web.zoom.us/j/84987611486?pwd=Biw6cc9UwWI6FrM51Ugox10sClIP6n.1', style: 'danger' } ] }\n  ]\n};\nreturn [{ json: { ...item, blocks } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2552,
+        192
+      ],
+      "id": "a1b2c3d4-build-slack-blocks",
+      "name": "Build Slack blocks"
     },
     {
       "parameters": {
@@ -81,10 +94,10 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        0,
-        192
+        1776,
+        384
       ],
-      "id": "c709f987-ea88-43d5-a342-1b51a3e485fa",
+      "id": "40abfe8b-be60-456c-9987-ca3453ac50bc",
       "name": "Webhook",
       "webhookId": "0ce14788-827f-4d45-bb3d-b19bac30bfb7"
     },
@@ -134,10 +147,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        224,
-        96
+        2000,
+        288
       ],
-      "id": "55ad9ec4-0c8d-47d2-859b-7fb221669872",
+      "id": "fc859ab8-09b5-4074-917a-f446fb7f8f1a",
       "name": "Validate date and time"
     },
     {
@@ -147,10 +160,10 @@
       "type": "n8n-nodes-base.stopAndError",
       "typeVersion": 1,
       "position": [
-        448,
-        192
+        2224,
+        384
       ],
-      "id": "742909c4-69e6-4d10-af16-d00b96b79b0a",
+      "id": "02578241-3721-4efd-a037-482384be7352",
       "name": "Stop on error"
     }
   ],
@@ -162,7 +175,7 @@
             "date": "2026-01-12",
             "time": "16:00",
             "topic": "What are you working on with InnerSource at your company right now?",
-            "channel": "ispo-working-group",
+            "channel": "bot-testing",
             "meeting_notes_url": "https://docs.google.com/document/d/1wCs68YlWH058GBCwqEyW5UX4hEaGdDKQwYSnLDw0SX8/edit?usp=sharing"
           }
         }
@@ -203,6 +216,17 @@
       "main": [
         [
           {
+            "node": "Build Slack blocks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Slack blocks": {
+      "main": [
+        [
+          {
             "node": "Send a message",
             "type": "main",
             "index": 0
@@ -222,14 +246,16 @@
       ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "availableInMCP": false
   },
-  "versionId": "b857c127-f1af-411b-842b-e5ead0cce1fe",
+  "versionId": "1e55310f-bdcb-46bc-91d5-6db122fdcb45",
   "meta": {
-    "instanceId": "c8e13a09ffa43327fd701e439b2a9b8e9a88dafc831863b024ea71f9a540b17f"
+    "templateCredsSetupCompleted": true,
+    "instanceId": "505d3f2effe3cea9c5bcf74fb293004bb613f932b3d6dd9cc01c7c68e9422333"
   },
-  "id": "OoKuKHPTjTAImZrt",
+  "id": "2_9dzDlUHKH3OPB-UarRL",
   "tags": []
 }

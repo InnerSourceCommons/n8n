@@ -3,13 +3,13 @@
   "nodes": [
     {
       "parameters": {},
-      "id": "02cdc6bb-7a83-4a98-a01a-932879edb0b9",
+      "id": "7c57a8f8-4159-4c76-aeea-2fb3091d5a04",
       "name": "Manual Trigger",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        608,
-        -176
+        336,
+        240
       ],
       "notes": "Starts the workflow manually."
     },
@@ -26,7 +26,7 @@
             {
               "id": "desired-structure",
               "name": "desiredStructure",
-              "value": "=[\n  {\n    name: '00 – Governance',\n    children: [\n      { name: 'Charter' },\n      { name: 'Roles & Responsibilities' },\n      { name: 'Contribution Model' },\n      { name: 'Style Guide' },\n      { name: 'Workflow – Google Drive to GitHub' },\n      { name: 'Naming Conventions' },\n      { name: 'Review Process' },\n      { name: 'Meetings & Decisions Register' },\n      { name: 'Permissions Model' }\n    ]\n  },\n  {\n    name: '01 – Working Groups',\n    children: [\n      {\n        name: 'WG – Documentation',\n        children: [\n          { name: 'Charter' },\n          { name: 'Notes' },\n          { name: 'Drafts' },\n          { name: 'Final Deliverables' },\n          { name: 'Research & References' }\n        ]\n      },\n      {\n        name: 'WG – Community Onboarding',\n        children: [\n          { name: 'Charter' },\n          { name: 'Notes' },\n          { name: 'Drafts' },\n          { name: 'Final Deliverables' },\n          { name: 'Research & References' }\n        ]\n      },\n      {\n        name: 'WG – Software Patterns',\n        children: [\n          { name: 'Charter' },\n          { name: 'Notes' },\n          { name: 'Drafts' },\n          { name: 'Final Deliverables' },\n          { name: 'Research & References' }\n        ]\n      },\n      {\n        name: 'WG – Case Studies',\n        children: [\n          { name: 'Charter' },\n          { name: 'Notes' },\n          { name: 'Drafts' },\n          { name: 'Final Deliverables' },\n          { name: 'Research & References' }\n        ]\n      },\n      {\n        name: 'WG – Training Materials',\n        children: [\n          { name: 'Charter' },\n          { name: 'Notes' },\n          { name: 'Drafts' },\n          { name: 'Final Deliverables' },\n          { name: 'Research & References' }\n        ]\n      },\n      {\n        name: 'WG – Tooling & Automation',\n        children: [\n          { name: 'Charter' },\n          { name: 'Notes' },\n          { name: 'Drafts' },\n          { name: 'Final Deliverables' },\n          { name: 'Research & References' }\n        ]\n      }\n    ]\n  },\n  {\n    name: '02 – Public Collaboration',\n    children: [\n      { name: 'RFCs (Requests for Comment)' },\n      { name: 'Ideas, Proposals, Brainstorms' },\n      { name: 'Backlog – Proposed Projects' },\n      { name: 'Community Submissions' },\n      { name: 'Research & Source Material' }\n    ]\n  },\n  {\n    name: '03 – Drafts & Work-in-Progress',\n    children: [\n      { name: 'Articles in Development' },\n      { name: 'Patterns in Development' },\n      { name: 'Case Studies in Development' },\n      { name: 'Training Modules Drafts' },\n      { name: 'Editorial Review Pipeline' },\n      { name: 'Ready for Migration to GitHub' }\n    ]\n  },\n  {\n    name: '04 – Published (To GitHub)',\n    children: [\n      { name: 'Patterns' },\n      { name: 'Articles' },\n      { name: 'Case Studies' },\n      { name: 'Onboarding Materials' },\n      { name: 'Tooling Guides' },\n      { name: 'Governance Docs' },\n      { name: 'Images & Diagrams' }\n    ]\n  },\n  {\n    name: '05 – Assets & Templates',\n    children: [\n      {\n        name: 'Templates',\n        children: [\n          { name: 'Pattern Template' },\n          { name: 'Case Study Template' },\n          { name: 'Editorial Review Checklist' },\n          { name: 'Working Group Charter Template' },\n          { name: 'Governance Doc Template' },\n          { name: 'Social Media Share Image Template' }\n        ]\n      },\n      {\n        name: 'Brand & Visuals',\n        children: [\n          { name: 'Logos' },\n          { name: 'Color Guides' },\n          { name: 'Diagrams' }\n        ]\n      }\n    ]\n  },\n  {\n    name: '06 – Community & Meetings',\n    children: [\n      { name: 'Meeting Notes (All WGs)' },\n      { name: 'General Meetings & Town Halls' },\n      { name: 'Attendance Records' },\n      { name: 'Slides (Shared Presentations)' },\n      { name: 'Workshop Materials' },\n      { name: 'Volunteer Onboarding' }\n    ]\n  },\n  {\n    name: '07 – Outreach & Education',\n    children: [\n      { name: 'Social Posts' },\n      { name: 'Conference Talks' },\n      { name: 'Webinars' },\n      { name: 'Training Decks' },\n      { name: 'Case Study Videos (Raw)' },\n      { name: 'Media Requests & Press' }\n    ]\n  },\n  {\n    name: '08 – Archives',\n    children: [\n      { name: '2025' },\n      { name: '2026' }\n    ]\n  }\n]",
+              "value": "=[\n  {\n    name: '00 – Governance',\n    children: [\n      { name: 'Charter.gdoc' },\n      { name: 'Roles & Responsibilities.gdoc' },\n      { name: 'Style Guide (Docs).gdoc' },\n      { name: 'Workflow: Google -> GitHub' },\n      { name: 'Naming Conventions.gdoc' },\n      { name: 'Meetings & Decisions Register.gdoc' },\n      { name: 'Permissions Model.gdoc' }\n    ]\n  },\n  {\n    name: '01 – Working Groups',\n    children: [\n      { name: 'Charter.gdoc' },\n      { name: '<WG Name> – Documentation' },\n      { name: '<WG Name> – Community Onboarding' },\n      { name: '<WG Name> – Software Patterns' },\n      { name: '<WG Name> – Case Studies' },\n      { name: '<WG Name> – Training Material' },\n      { name: '<WG Name> – Tooling & Automation' }\n    ]\n  },\n  {\n    name: '02 – Public Collaboration',\n    children: [\n      { name: 'RFCs (Requests for Comment)' },\n      { name: 'Ideas, Proposals, Brainstorming' },\n      { name: 'Backlog – Proposed Projects' },\n      { name: 'Community Submissions' },\n      { name: 'Research & Source Material' }\n    ]\n  },\n  {\n    name: '03 – Drafts & Work-in-Progress',\n    children: [\n      { name: 'Articles' },\n      { name: 'Patterns' },\n      { name: 'Case Studies' },\n      { name: 'Training' },\n      { name: 'Blog Posts' },\n      { name: 'Ready for Publication to GitHub' }\n    ]\n  },\n  {\n    name: '04 – Assets & Templates',\n    children: [\n      {\n        name: 'Templates',\n        children: [\n          { name: 'Pattern Template.gdoc' },\n          { name: 'Case Study Template.gdoc' },\n          { name: 'Editorial Review Checklist.gdoc' },\n          { name: 'Working Group Charter Template.gdoc' },\n          { name: 'Governance Doc Template.gdoc' },\n          { name: 'Social Media Share Image Template.gdoc' }\n        ]\n      },\n      {\n        name: 'Brand & Visuals',\n        children: [\n          { name: 'Logo Variants' },\n          { name: 'Color Guides' },\n          { name: 'Diagrams' }\n        ]\n      }\n    ]\n  },\n  {\n    name: '05 – Credentials'\n  },\n  {\n    name: '06 – Archives',\n    children: [\n      { name: '2026' },\n      { name: '2027' }\n    ]\n  },\n  {\n    name: '07 – Community & Meetings'\n  },\n  {\n    name: '08 – Outreach & Education'\n  }\n]\n",
               "type": "string"
             }
           ]
@@ -36,10 +36,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        832,
-        -176
+        560,
+        240
       ],
-      "id": "0ade6152-0727-4f1a-b3ac-32fdc2aee73f",
+      "id": "f68b6d4d-481a-4afc-a6be-01e1817a46ca",
       "name": "Set Configuration",
       "notes": "Sets the root folder ID and desired folder structure."
     },
@@ -84,14 +84,14 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        1056,
-        -176
+        784,
+        240
       ],
-      "id": "18cdb916-f3a8-4e0c-ba35-d88e9bfed9d3",
+      "id": "49c8d3e6-b81f-496d-a4fa-f14f46774382",
       "name": "Get All Folders",
       "credentials": {
         "googleDriveOAuth2Api": {
-          "id": "oc5qwSQ1WBDi4XNu",
+          "id": "Bd8OzpTQIKeOfW9k",
           "name": "Google Drive account"
         }
       },
@@ -104,10 +104,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1280,
-        -176
+        1008,
+        240
       ],
-      "id": "8d6fe05c-6fb6-4bce-bad4-e7a001613043",
+      "id": "db6ae3c3-b9e2-47ed-ad68-d005fa0a8d52",
       "name": "Build Actual Structure",
       "notes": "Converts the flat list of folders from Google Drive into a hierarchical JSON structure matching the desired format."
     },
@@ -118,10 +118,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1504,
-        -176
+        1232,
+        240
       ],
-      "id": "6df58080-fb42-48a5-929b-1547bc0bd7dc",
+      "id": "68fbde74-2826-4dd7-85eb-fe94e4c5a655",
       "name": "Set Missing Folders",
       "notes": "Compares desired structure with actual Google Drive structure and outputs exists flags for all folders."
     },
@@ -132,10 +132,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1728,
-        -176
+        1456,
+        240
       ],
-      "id": "fc1391e6-9d13-42fe-ad70-6e1c60b7d7d5",
+      "id": "544fd73c-10e3-46f8-b174-df393c7be42d",
       "name": "Flatten Folders to Create",
       "notes": "Flattens the structure and filters to only folders with exists == false. Sorts by depth so parents are created before children."
     },
@@ -172,14 +172,14 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        1936,
-        -176
+        1664,
+        240
       ],
-      "id": "0a603fb8-56eb-44b5-b5d9-245fc3b7b382",
+      "id": "436e4772-c867-42b8-9585-b00f2cfb0455",
       "name": "Create Folder",
       "credentials": {
         "googleDriveOAuth2Api": {
-          "id": "oc5qwSQ1WBDi4XNu",
+          "id": "Bd8OzpTQIKeOfW9k",
           "name": "Google Drive account"
         }
       },
@@ -193,11 +193,11 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        272,
-        -416
+        0,
+        0
       ],
       "typeVersion": 1,
-      "id": "11d96f7e-a1a0-476a-94a4-d0f1f8466914",
+      "id": "b4275b50-fda3-4dc4-95e8-e36993474f97",
       "name": "Sticky Note"
     }
   ],
@@ -273,14 +273,12 @@
   "active": false,
   "settings": {
     "executionOrder": "v1",
-    "callerPolicy": "workflowsFromSameOwner",
     "availableInMCP": false
   },
-  "versionId": "577a8958-c527-4812-a3d4-fcce3ad76977",
+  "versionId": "dd5e1022-7c1c-4fb3-940c-dc7c6d371d99",
   "meta": {
-    "templateCredsSetupCompleted": true,
-    "instanceId": "c8e13a09ffa43327fd701e439b2a9b8e9a88dafc831863b024ea71f9a540b17f"
+    "instanceId": "505d3f2effe3cea9c5bcf74fb293004bb613f932b3d6dd9cc01c7c68e9422333"
   },
-  "id": "WCp2QrVh0aqAR9gu",
+  "id": "ULeI_q4-L9VmEufZdmlsb",
   "tags": []
 }

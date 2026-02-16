@@ -1,0 +1,201 @@
+{
+  "name": "New Member Introduction",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        160
+      ],
+      "id": "57c04350-92f0-4726-b181-19031d8c074f",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/conversations.open",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"users\": \"{{ $json.new_user_id }},U01UF8JNY5R,U4S1WTCHG,U07FM5PSB7T\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        352,
+        0
+      ],
+      "id": "ce9ff04b-5bd0-413d-a50b-33f794f9af0e",
+      "name": "Open Slack Group Conversation",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "H7foJgyMUJ9V0NzY",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"channel\": \"{{ $json.channel.id }}\",\n  \"text\": \"*Hey {{ $('Edit Fields').item.json.new_user_display_name }}!*\\n\\nIt's so cool to have you here! 🎉 \\n\\nThis is a friendly space where people from all over the world come together to share how they're using open collaboration inside their organizations.\\n\\n💡 To help you get settled:\\n\\n• Start with our *<https://innersourcecommons.org/community/quick-start-guide/|Quick Start Guide>*\\n• Pop into • <#C0867TAF63H|newcomers> and tell us a bit about yourself.\\n• Check out channels that match your interests: <#C2EFRTS6A|innersource-patterns>, <#C046MD5R5RT|local-community>, <#C04DT6NQX7G|ispo-working-group>\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        624,
+        0
+      ],
+      "id": "7c179fd3-f3a4-4a5f-967f-e2db9fda0291",
+      "name": "Start Group Chat",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "H7foJgyMUJ9V0NzY",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "081acc5e-24d0-4f96-8d91-663593c9f48e",
+              "name": "new_user_display_name",
+              "value": "={{ $json.new_user_display_name || $json.user.profile.display_name }}",
+              "type": "string"
+            },
+            {
+              "id": "b7d48053-35dc-464c-9360-3a141016492e",
+              "name": "new_user_id",
+              "value": "={{ $json.new_user_id || $json.user.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        176,
+        0
+      ],
+      "id": "e57f8799-a2b3-46a4-a89c-b3b8ec60030d",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "trigger": [
+          "team_join"
+        ],
+        "channelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.slackTrigger",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        0
+      ],
+      "id": "f81f9df0-0075-4979-8484-6880cc6c5814",
+      "name": "New User Slack Trigger",
+      "webhookId": "dbb44d52-6b1b-49b8-8015-222231497d5c",
+      "credentials": {
+        "slackApi": {
+          "id": "bR6EBrpyu6ZLwkX8",
+          "name": "Bot User OAuth Token"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "When clicking ‘Execute workflow’": [
+      {
+        "json": {
+          "new_user_display_name": "Mock Slack Display Name",
+          "new_user_id": "U01UF8JNY5R"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Open Slack Group Conversation": {
+      "main": [
+        [
+          {
+            "node": "Start Group Chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start Group Chat": {
+      "main": [
+        []
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Open Slack Group Conversation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "New User Slack Trigger": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "saveExecutionProgress": true
+  },
+  "versionId": "a622cd29-45b4-45aa-a3f2-31a7d1f37399",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "505d3f2effe3cea9c5bcf74fb293004bb613f932b3d6dd9cc01c7c68e9422333"
+  },
+  "id": "_xX2w33EjbhHQE8nM9wHZ",
+  "tags": []
+}

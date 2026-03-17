@@ -6,10 +6,10 @@
         "operation": "copy",
         "fileId": {
           "__rl": true,
-          "value": "1_TJQopWFtbmAJhaObVJnRS60Lsr6VHyw1ytwhZwrU6U",
+          "value": "1dYmjpLdxiLmmfuYwKvmlDuNjjuPpXeXHfuAHTsu335w",
           "mode": "list",
-          "cachedResultName": "ISPO Working Group Meeting - 2025 - MM - DD",
-          "cachedResultUrl": "https://docs.google.com/document/d/1_TJQopWFtbmAJhaObVJnRS60Lsr6VHyw1ytwhZwrU6U/edit?usp=drivesdk"
+          "cachedResultName": "ISPO Working Group Meeting - YYYY - MM - DD",
+          "cachedResultUrl": "https://docs.google.com/document/d/1dYmjpLdxiLmmfuYwKvmlDuNjjuPpXeXHfuAHTsu335w/edit?usp=drivesdk"
         },
         "name": "=ISPO Working Group Meeting - {{ $('Template Fields').item.json.year }} - {{ $('Template Fields').item.json.month }} - {{ $('Template Fields').item.json.day }}",
         "options": {}
@@ -17,14 +17,14 @@
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
       "position": [
-        432,
-        16
+        1264,
+        0
       ],
-      "id": "2be38349-555c-4bd2-8ad3-ca80cb6fe50d",
+      "id": "a129cb77-0fd0-419b-a1c4-3360c85dccdb",
       "name": "Copy file",
       "credentials": {
         "googleDriveOAuth2Api": {
-          "id": "oc5qwSQ1WBDi4XNu",
+          "id": "Bd8OzpTQIKeOfW9k",
           "name": "Google Drive account"
         }
       }
@@ -34,10 +34,10 @@
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        -832,
-        16
+        0,
+        0
       ],
-      "id": "68a28d67-7237-40b0-abc7-53b4d8c574e2",
+      "id": "b6211ed5-8312-437e-8ac7-e91b60fdb0dc",
       "name": "When clicking ‘Execute workflow’"
     },
     {
@@ -82,14 +82,14 @@
       "type": "n8n-nodes-base.googleDocs",
       "typeVersion": 2,
       "position": [
-        656,
-        16
+        1488,
+        0
       ],
-      "id": "95a7979e-13ef-44d5-9a2b-240715a82483",
+      "id": "a3b1ecb0-f0b3-4218-8932-91482b5fe76f",
       "name": "Update a document",
       "credentials": {
         "googleDocsOAuth2Api": {
-          "id": "Wba16H74EezRKaMT",
+          "id": "MnggoHU6JgTfK3gk",
           "name": "Google Docs account"
         }
       }
@@ -147,10 +147,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -608,
-        16
+        224,
+        0
       ],
-      "id": "b5a40cb4-c812-4282-9475-18df2c9f49bd",
+      "id": "7b084bc0-9717-43a1-8ab4-a645f18baf87",
       "name": "Template Fields"
     },
     {
@@ -158,10 +158,10 @@
       "type": "n8n-nodes-base.limit",
       "typeVersion": 1,
       "position": [
-        -384,
-        16
+        448,
+        0
       ],
-      "id": "bf644b04-7316-448a-b93e-4a4561464eb6",
+      "id": "58784538-42ad-40d8-a32f-26a125c61ebe",
       "name": "Limit to 1 item"
     },
     {
@@ -181,10 +181,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -160,
-        16
+        672,
+        0
       ],
-      "id": "bced3745-576f-4a8b-87d8-19cff2e848c4",
+      "id": "b1c21e63-7236-40a6-b99f-dda33db1f31b",
       "name": "Set filename"
     },
     {
@@ -220,14 +220,14 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        48,
-        16
+        880,
+        0
       ],
-      "id": "f2cdcb73-aa47-4539-b9f3-4d76b0e13a78",
+      "id": "2a3db4c8-02b5-44da-93f0-3b332107f7e6",
       "name": "Search for file",
       "credentials": {
         "googleDriveOAuth2Api": {
-          "id": "oc5qwSQ1WBDi4XNu",
+          "id": "Bd8OzpTQIKeOfW9k",
           "name": "Google Drive account"
         }
       }
@@ -268,10 +268,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        272,
-        16
+        1104,
+        0
       ],
-      "id": "dee0e613-f441-4dc7-9e75-a2a2e3ed7004",
+      "id": "192db64c-2b56-4e43-abde-504f950810ae",
       "name": "If file does not exist"
     },
     {
@@ -281,10 +281,10 @@
       "type": "n8n-nodes-base.stopAndError",
       "typeVersion": 1,
       "position": [
-        496,
-        224
+        1328,
+        208
       ],
-      "id": "296f092f-077d-4505-abf9-99d4f0e5b132",
+      "id": "3bf3e6c6-5f4e-4e8b-b6a4-8e1191099be7",
       "name": "Stop if file exists"
     },
     {
@@ -296,10 +296,10 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
       "position": [
-        -832,
-        272
+        0,
+        256
       ],
-      "id": "c23ec0fc-2792-4789-8370-0f14c5260f5a",
+      "id": "569b8aca-76f7-4a7d-9ae0-f91d20b4ab30",
       "name": "Webhook",
       "webhookId": "62131315-3203-4e26-bcbc-116597cf73bd"
     }
@@ -309,7 +309,7 @@
       {
         "json": {
           "body": {
-            "date": "2025-12-01",
+            "date": "2026-02-09",
             "should_overwrite_file": true,
             "roles": {
               "scheduler": "Scheduler Role",
@@ -421,13 +421,14 @@
   },
   "active": false,
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "availableInMCP": false
   },
-  "versionId": "111b432f-b6e9-4c14-bf06-09820326f924",
+  "versionId": "019397ce-2f10-4ac3-9b95-ef91353618d3",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "c8e13a09ffa43327fd701e439b2a9b8e9a88dafc831863b024ea71f9a540b17f"
+    "instanceId": "505d3f2effe3cea9c5bcf74fb293004bb613f932b3d6dd9cc01c7c68e9422333"
   },
-  "id": "JnyLQbXbFCyiINGJ",
+  "id": "qlcyjkm_S9lEYJCM991S8",
   "tags": []
 }

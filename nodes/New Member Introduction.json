@@ -6,10 +6,10 @@
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        -48,
-        160
+        336,
+        448
       ],
-      "id": "57c04350-92f0-4726-b181-19031d8c074f",
+      "id": "85c48cca-13c5-4393-a6c6-841b660cccbb",
       "name": "When clicking ‘Execute workflow’"
     },
     {
@@ -26,10 +26,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        352,
-        0
+        1008,
+        352
       ],
-      "id": "ce9ff04b-5bd0-413d-a50b-33f794f9af0e",
+      "id": "2ac5a138-2d18-4e34-8255-5fbfac5f0d51",
       "name": "Open Slack Group Conversation",
       "credentials": {
         "slackOAuth2Api": {
@@ -46,16 +46,16 @@
         "nodeCredentialType": "slackOAuth2Api",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"channel\": \"{{ $json.channel.id }}\",\n  \"text\": \"*Hey {{ $('Edit Fields').item.json.new_user_display_name }}!*\\n\\nIt's so cool to have you here! 🎉 \\n\\nThis is a friendly space where people from all over the world come together to share how they're using open collaboration inside their organizations.\\n\\n💡 To help you get settled:\\n\\n• Start with our *<https://innersourcecommons.org/community/quick-start-guide/|Quick Start Guide>*\\n• Pop into • <#C0867TAF63H|newcomers> and tell us a bit about yourself.\\n• Check out channels that match your interests: <#C2EFRTS6A|innersource-patterns>, <#C046MD5R5RT|local-community>, <#C04DT6NQX7G|ispo-working-group>\"\n}",
+        "jsonBody": "={\n  \"channel\": \"{{ $json.channel.id }}\",\n  \"blocks\": {{ JSON.stringify($('Slack Welcome Message (Block Kit)').item.json.blocks) }}\n}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        624,
-        0
+        1232,
+        352
       ],
-      "id": "7c179fd3-f3a4-4a5f-967f-e2db9fda0291",
+      "id": "b3b3d7f0-b152-451a-bbf6-6ce13d8f8127",
       "name": "Start Group Chat",
       "credentials": {
         "slackOAuth2Api": {
@@ -71,7 +71,7 @@
             {
               "id": "081acc5e-24d0-4f96-8d91-663593c9f48e",
               "name": "new_user_display_name",
-              "value": "={{ $json.new_user_display_name || $json.user.profile.display_name }}",
+              "value": "={{ $json.new_user_display_name || $json.user.real_name }}",
               "type": "string"
             },
             {
@@ -87,10 +87,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        176,
-        0
+        560,
+        352
       ],
-      "id": "e57f8799-a2b3-46a4-a89c-b3b8ec60030d",
+      "id": "9f90a669-9406-47c3-9a6e-0331504a37ac",
       "name": "Edit Fields"
     },
     {
@@ -108,10 +108,10 @@
       "type": "n8n-nodes-base.slackTrigger",
       "typeVersion": 1,
       "position": [
-        -48,
-        0
+        336,
+        256
       ],
-      "id": "f81f9df0-0075-4979-8484-6880cc6c5814",
+      "id": "2d04d0c5-77f6-4b14-9e15-c1d16cde70eb",
       "name": "New User Slack Trigger",
       "webhookId": "dbb44d52-6b1b-49b8-8015-222231497d5c",
       "credentials": {
@@ -120,13 +120,26 @@
           "name": "Bot User OAuth Token"
         }
       }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Edit the blocks array below to match Slack Block Kit. Copy the whole blocks array\n// and paste into https://app.slack.com/block-kit-builder/ to preview.\n// block_kit_builder_url in the output opens the builder with this payload.\nconst displayName = $input.first().json.new_user_display_name || 'there';\nconst blocks = [\n  {\n    type: 'section',\n    text: {\n      type: 'mrkdwn',\n      text: `*Hey ${displayName}!*\\n\\nWelcome to the InnerSource Commons! It's so cool you're here! 🎉\\n\\nThis is a global community of practitioners, researchers, and curious minds all exploring how open collaboration works inside organizations.`\n    }\n  },\n  { type: 'divider' },\n  {\n    type: 'section',\n    text: {\n      type: 'mrkdwn',\n      text: \"👋 *Head over to <#C0867TAF63H|newcomers> and tell us a little about yourself, or choose how you'd like to get started:*\"\n    }\n  },\n  {\n    type: 'actions',\n    elements: [\n      { type: 'button', text: { type: 'plain_text', text: '📖 Quick Start Guide', emoji: true }, url: 'https://innersourcecommons.org/community/quick-start-guide/' },\n      { type: 'button', text: { type: 'plain_text', text: '📅 Join a Meeting', emoji: true }, url: 'https://innersourcecommons.org/community/calendar/' },\n      { type: 'button', text: { type: 'plain_text', text: '🏢 Pattern Library', emoji: true }, url: 'https://patterns.innersourcecommons.org/' }\n    ]\n  },\n  {\n    type: 'section',\n    text: {\n      type: 'mrkdwn',\n      text: '🌍 Join a Regional Community: <#C07MXDSG2P8|africa> <#C03M546NR16|japan>'\n    }\n  },\n  { type: 'divider' },\n  {\n    type: 'section',\n    text: {\n      type: 'mrkdwn',\n      text: '🔎 *Explore channels that match your interests:*\\n\\n• <#C2EFRTS6A|innersource-patterns> — practical patterns for making innersource work\\n• <#C046MD5R5RT|local-community> — find or start a gathering near you\\n• <#C04DT6NQX7G|ispo-working-group> — dive into standards and best practices'\n    }\n  },\n  { type: 'divider' },\n  {\n    type: 'section',\n    text: {\n      type: 'mrkdwn',\n      text: '💬 Looking for something else? Ask in <#C04PXKRN4|general>, and the community will be happy to help!'\n    }\n  }\n];\nconst payload = { blocks };\nconst blockKitBuilderUrl = 'https://app.slack.com/block-kit-builder/T04PXKRM0#' + encodeURIComponent(JSON.stringify(payload));\nreturn $input.all().map(item => ({\n  json: {\n    ...item.json,\n    blocks,\n    blocks_json: JSON.stringify(payload, null, 2),\n    block_kit_builder_url: blockKitBuilderUrl\n  }\n}));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        784,
+        352
+      ],
+      "id": "9d109f7d-8c87-44e4-b7c1-0ee50af37714",
+      "name": "Slack Welcome Message (Block Kit)"
     }
   ],
   "pinData": {
     "When clicking ‘Execute workflow’": [
       {
         "json": {
-          "new_user_display_name": "Mock Slack Display Name",
+          "new_user_display_name": "Mock New Member",
           "new_user_id": "U01UF8JNY5R"
         }
       }
@@ -155,12 +168,18 @@
         ]
       ]
     },
-    "Start Group Chat": {
+    "Edit Fields": {
       "main": [
-        []
+        [
+          {
+            "node": "Slack Welcome Message (Block Kit)",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
-    "Edit Fields": {
+    "Slack Welcome Message (Block Kit)": {
       "main": [
         [
           {
@@ -191,7 +210,7 @@
     "callerPolicy": "workflowsFromSameOwner",
     "saveExecutionProgress": true
   },
-  "versionId": "a622cd29-45b4-45aa-a3f2-31a7d1f37399",
+  "versionId": "ad9f93f7-2a1d-4fc8-9763-ce839c7f6c0f",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "505d3f2effe3cea9c5bcf74fb293004bb613f932b3d6dd9cc01c7c68e9422333"

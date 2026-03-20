@@ -7,7 +7,7 @@ if [ -z "$1" ]; then
 fi
 
 WORKFLOW_FILE="$1"
-BASE_URL="https://n8n-pm2n3z2t7q-uw.a.run.app/api/v1"
+BASE_URL="https://innersourcecommons.app.n8n.cloud/api/v1"
 
 # Extract Workflow ID from the JSON file using jq for accuracy
 WORKFLOW_ID=$(jq -r '.id' "$WORKFLOW_FILE")

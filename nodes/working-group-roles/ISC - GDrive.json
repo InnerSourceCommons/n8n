@@ -45,44 +45,20 @@
     },
     {
       "parameters": {
-        "url": "https://www.googleapis.com/drive/v3/files",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "googleDriveOAuth2Api",
-        "sendQuery": true,
-        "queryParameters": {
-          "parameters": [
-            {
-              "name": "q",
-              "value": "mimeType = 'application/vnd.google-apps.folder' and trashed = false"
-            },
-            {
-              "name": "fields",
-              "value": "files(id,name,parents)"
-            },
-            {
-              "name": "includeItemsFromAllDrives",
-              "value": "true"
-            },
-            {
-              "name": "supportsAllDrives",
-              "value": "true"
-            },
-            {
-              "name": "pageSize",
-              "value": "1000"
-            }
-          ]
-        },
+        "resource": "fileFolder",
+        "operation": "search",
+        "searchMethod": "query",
+        "queryString": "mimeType = 'application/vnd.google-apps.folder' and trashed = false",
+        "returnAll": true,
+        "filter": {},
         "options": {
-          "response": {
-            "response": {
-              "responseFormat": "json"
-            }
-          }
+          "fields": [
+            "*"
+          ]
         }
       },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
       "position": [
         784,
         240
@@ -91,15 +67,14 @@
       "name": "Get All Folders",
       "credentials": {
         "googleDriveOAuth2Api": {
-          "id": "Bd8OzpTQIKeOfW9k",
           "name": "Google Drive account"
         }
       },
-      "notes": "Gets all folders accessible to the account (across drives). Build Actual Structure will filter this to only the subtree rooted at rootFolderId."
+      "notes": "Lists all folders (incl. shared drives) via the Google Drive node so OAuth is not blocked in HTTP Request. Build Actual Structure merges items into one tree."
     },
     {
       "parameters": {
-        "jsCode": "// Build hierarchical structure from flat list of folders\n// Convert Google Drive folder structure to JSON matching the desired structure format\n\nconst rootFolderId = $('Set Configuration').first().json.rootFolderId;\nconst allFolders = $json.files || [];\n\nconsole.log('Total folders found in Google Drive:', allFolders.length);\n\n// Build a map: parentId -> [children]\nconst childrenMap = new Map();\nfor (const folder of allFolders) {\n  const parentId = folder.parents && folder.parents.length > 0 ? folder.parents[0] : rootFolderId;\n  if (!childrenMap.has(parentId)) {\n    childrenMap.set(parentId, []);\n  }\n  childrenMap.get(parentId).push({\n    id: folder.id,\n    name: folder.name\n  });\n}\n\nconsole.log('Folders directly under root:', childrenMap.get(rootFolderId)?.length || 0);\n\n// Build tree structure starting directly from rootFolderId\n// Function to recursively build tree structure\nfunction buildTree(parentId) {\n  const children = childrenMap.get(parentId) || [];\n  return children.map(child => {\n    const node = { name: child.name };\n    const childChildren = buildTree(child.id);\n    if (childChildren.length > 0) {\n      node.children = childChildren;\n    }\n    return node;\n  });\n}\n\n// Build tree starting from rootFolderId (which is now a folder, not a drive root)\nconst actualStructure = buildTree(rootFolderId);\n\nconsole.log('Actual structure built:', JSON.stringify(actualStructure, null, 2));\n\nreturn [{ json: { actualStructure, allFolders } }];"
+        "jsCode": "// Build hierarchical structure from flat list of folders\n// Convert Google Drive folder structure to JSON matching the desired structure format\n\nconst rootFolderId = $('Set Configuration').first().json.rootFolderId;\n// HTTP Request shape: { files: [...] }. Google Drive Search: one item per folder.\nconst allFolders = Array.isArray($json.files)\n  ? $json.files\n  : $input.all().map((item) => item.json);\n\nconsole.log('Total folders found in Google Drive:', allFolders.length);\n\n// Build a map: parentId -> [children]\nconst childrenMap = new Map();\nfor (const folder of allFolders) {\n  const parentId = folder.parents && folder.parents.length > 0 ? folder.parents[0] : rootFolderId;\n  if (!childrenMap.has(parentId)) {\n    childrenMap.set(parentId, []);\n  }\n  childrenMap.get(parentId).push({\n    id: folder.id,\n    name: folder.name\n  });\n}\n\nconsole.log('Folders directly under root:', childrenMap.get(rootFolderId)?.length || 0);\n\n// Build tree structure starting directly from rootFolderId\n// Function to recursively build tree structure\nfunction buildTree(parentId) {\n  const children = childrenMap.get(parentId) || [];\n  return children.map(child => {\n    const node = { name: child.name };\n    const childChildren = buildTree(child.id);\n    if (childChildren.length > 0) {\n      node.children = childChildren;\n    }\n    return node;\n  });\n}\n\n// Build tree starting from rootFolderId (which is now a folder, not a drive root)\nconst actualStructure = buildTree(rootFolderId);\n\nconsole.log('Actual structure built:', JSON.stringify(actualStructure, null, 2));\n\nreturn [{ json: { actualStructure, allFolders } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -141,36 +116,24 @@
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "https://www.googleapis.com/drive/v3/files",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "googleDriveOAuth2Api",
-        "sendQuery": true,
-        "queryParameters": {
-          "parameters": [
-            {
-              "name": "supportsAllDrives",
-              "value": "true"
-            },
-            {
-              "name": "includeItemsFromAllDrives",
-              "value": "true"
-            }
-          ]
+        "resource": "folder",
+        "operation": "create",
+        "name": "={{ $json.name }}",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive"
         },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ {\n  name: $json.name,\n  mimeType: 'application/vnd.google-apps.folder',\n  parents: [$json.parentFolderId]\n} }}",
-        "options": {
-          "response": {
-            "response": {
-              "responseFormat": "json"
-            }
-          }
-        }
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $json.parentFolderId }}",
+          "mode": "id"
+        },
+        "options": {}
       },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
       "position": [
         1664,
         240
@@ -179,11 +142,10 @@
       "name": "Create Folder",
       "credentials": {
         "googleDriveOAuth2Api": {
-          "id": "Bd8OzpTQIKeOfW9k",
           "name": "Google Drive account"
         }
       },
-      "notes": "Creates a folder in Google Drive using the Google Drive API. Includes shared drive parameters to ensure folders are created in the shared drive, not My Drive."
+      "notes": "Creates a folder via the Google Drive node (same shared-drive behavior as the Drive API). Parent folder ID comes from Flatten Folders to Create."
     },
     {
       "parameters": {

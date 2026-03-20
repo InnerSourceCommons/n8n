@@ -93,6 +93,33 @@ manager like `screen` or `tmux`.
 Access n8n at: **<https://YOUR_SUBDOMAIN.YOUR_DOMAIN.com>** (replace with your
 actual hostname)
 
+## Troubleshooting
+
+### Switched from Colima (or OrbStack/Lima) to Docker Desktop
+
+- **Docker context**: Ensure the CLI talks to Docker Desktop:
+  ```bash
+  docker context ls          # current context has * next to it
+  docker context use desktop-linux   # or "default" if that’s your Desktop context
+  ```
+- **config.yml**: No change needed. `service: http://localhost:5678` is correct for both; the tunnel runs on your Mac and reaches n8n on the host’s localhost.
+- **Containers**: Start the stack again so it runs in Docker Desktop:
+  ```bash
+  docker-compose up -d
+  ```
+
+### Tunnel can’t reach n8n
+
+1. Confirm n8n is running and listening on the host:
+   ```bash
+   docker ps                    # n8n container should be Up
+   curl -s -o /dev/null -w "%{http_code}" http://localhost:5678   # should be 200 or 302
+   ```
+2. Start the tunnel only after n8n is up:
+   ```bash
+   cloudflared tunnel --config config.yml run
+   ```
+
 ## Reference
 
 For more details, see: <http://jeffbailey.us/blog/2025/11/21/how-do-i-self-host-n8n>

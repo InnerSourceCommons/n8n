@@ -3,7 +3,7 @@
   "nodes": [
     {
       "parameters": {},
-      "id": "7c57a8f8-4159-4c76-aeea-2fb3091d5a04",
+      "id": "68739301-f280-4579-85fe-12ae567661b2",
       "name": "Manual Trigger",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
@@ -39,14 +39,13 @@
         560,
         240
       ],
-      "id": "f68b6d4d-481a-4afc-a6be-01e1817a46ca",
+      "id": "43f053dc-cac9-4637-90e9-8c9861c2c85c",
       "name": "Set Configuration",
       "notes": "Sets the root folder ID and desired folder structure."
     },
     {
       "parameters": {
         "resource": "fileFolder",
-        "operation": "search",
         "searchMethod": "query",
         "queryString": "mimeType = 'application/vnd.google-apps.folder' and trashed = false",
         "returnAll": true,
@@ -63,11 +62,12 @@
         784,
         240
       ],
-      "id": "49c8d3e6-b81f-496d-a4fa-f14f46774382",
+      "id": "8dca4f00-e71f-48cd-9d94-7b97413842f2",
       "name": "Get All Folders",
       "credentials": {
         "googleDriveOAuth2Api": {
-          "name": "Google Drive account"
+          "id": "D6a6BbZD8vh3t1eB",
+          "name": "Google Drive OAuth2 API"
         }
       },
       "notes": "Lists all folders (incl. shared drives) via the Google Drive node so OAuth is not blocked in HTTP Request. Build Actual Structure merges items into one tree."
@@ -82,7 +82,7 @@
         1008,
         240
       ],
-      "id": "db6ae3c3-b9e2-47ed-ad68-d005fa0a8d52",
+      "id": "c274a87d-10c0-437c-9b80-1bc65fe56ce0",
       "name": "Build Actual Structure",
       "notes": "Converts the flat list of folders from Google Drive into a hierarchical JSON structure matching the desired format."
     },
@@ -96,7 +96,7 @@
         1232,
         240
       ],
-      "id": "68fbde74-2826-4dd7-85eb-fe94e4c5a655",
+      "id": "d4ac4416-a77f-4a35-af0b-7dfec46780b8",
       "name": "Set Missing Folders",
       "notes": "Compares desired structure with actual Google Drive structure and outputs exists flags for all folders."
     },
@@ -110,14 +110,13 @@
         1456,
         240
       ],
-      "id": "544fd73c-10e3-46f8-b174-df393c7be42d",
+      "id": "f1938329-11b6-43de-8f12-1bf60e19f2ac",
       "name": "Flatten Folders to Create",
       "notes": "Flattens the structure and filters to only folders with exists == false. Sorts by depth so parents are created before children."
     },
     {
       "parameters": {
         "resource": "folder",
-        "operation": "create",
         "name": "={{ $json.name }}",
         "driveId": {
           "__rl": true,
@@ -135,14 +134,15 @@
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
       "position": [
-        1664,
+        1680,
         240
       ],
-      "id": "436e4772-c867-42b8-9585-b00f2cfb0455",
+      "id": "9609db8f-5d11-4e55-8d9d-8ea86919011e",
       "name": "Create Folder",
       "credentials": {
         "googleDriveOAuth2Api": {
-          "name": "Google Drive account"
+          "id": "D6a6BbZD8vh3t1eB",
+          "name": "Google Drive OAuth2 API"
         }
       },
       "notes": "Creates a folder via the Google Drive node (same shared-drive behavior as the Drive API). Parent folder ID comes from Flatten Folders to Create."
@@ -159,8 +159,25 @@
         0
       ],
       "typeVersion": 1,
-      "id": "b4275b50-fda3-4dc4-95e8-e36993474f97",
+      "id": "759c314e-fabe-44e2-a1e0-aa988a2a17fb",
       "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        336,
+        48
+      ],
+      "id": "9b8020e8-d51b-4819-907a-876b1ec64426",
+      "name": "Schedule Trigger"
     }
   ],
   "pinData": {},
@@ -230,17 +247,32 @@
           }
         ]
       ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
     "executionOrder": "v1",
-    "availableInMCP": false
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "dynamic",
+    "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "dd5e1022-7c1c-4fb3-940c-dc7c6d371d99",
+  "versionId": "e5097990-6d4d-4f6d-8702-55b10fa269c0",
   "meta": {
-    "instanceId": "505d3f2effe3cea9c5bcf74fb293004bb613f932b3d6dd9cc01c7c68e9422333"
+    "templateCredsSetupCompleted": true,
+    "instanceId": "42566e2b3b77f028e93e74b7c60d9194d35d5cfbf8340b4442416b191d1e3a55"
   },
-  "id": "ULeI_q4-L9VmEufZdmlsb",
+  "id": "SDv5m3VmnKdlwv5u",
   "tags": []
 }

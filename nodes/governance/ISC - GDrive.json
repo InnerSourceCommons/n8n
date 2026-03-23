@@ -3,13 +3,13 @@
   "nodes": [
     {
       "parameters": {},
-      "id": "68739301-f280-4579-85fe-12ae567661b2",
+      "id": "e2b56191-98c7-47d3-a1d1-a47ec373a16e",
       "name": "Manual Trigger",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        336,
-        128
+        1456,
+        48
       ],
       "notes": "Starts the workflow manually."
     },
@@ -36,10 +36,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        784,
-        32
+        1904,
+        -48
       ],
-      "id": "43f053dc-cac9-4637-90e9-8c9861c2c85c",
+      "id": "7f673a29-3555-4677-966d-ca845d5ca698",
       "name": "Set Configuration",
       "notes": "Sets the root folder ID and desired folder structure."
     },
@@ -59,10 +59,10 @@
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
       "position": [
-        1008,
-        32
+        2128,
+        -48
       ],
-      "id": "8dca4f00-e71f-48cd-9d94-7b97413842f2",
+      "id": "825f8c9d-e8ee-4331-aa45-892a5711a9a3",
       "name": "Get All Folders",
       "credentials": {
         "googleDriveOAuth2Api": {
@@ -79,10 +79,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1232,
-        32
+        2352,
+        -48
       ],
-      "id": "c274a87d-10c0-437c-9b80-1bc65fe56ce0",
+      "id": "c40f4f32-2e2a-44a9-bf5c-ae2b47f8368a",
       "name": "Build Actual Structure",
       "notes": "Converts the flat list of folders from Google Drive into a hierarchical JSON structure matching the desired format."
     },
@@ -93,10 +93,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1456,
-        32
+        2576,
+        -48
       ],
-      "id": "d4ac4416-a77f-4a35-af0b-7dfec46780b8",
+      "id": "f63bee6d-e29b-4721-b60b-53d06f5efdb5",
       "name": "Set Missing Folders",
       "notes": "Compares desired structure with actual Google Drive structure and outputs exists flags for all folders."
     },
@@ -107,10 +107,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2352,
-        32
+        3472,
+        -48
       ],
-      "id": "f1938329-11b6-43de-8f12-1bf60e19f2ac",
+      "id": "003bca95-1ef1-46a4-b863-fbce670c9bbf",
       "name": "Flatten Folders to Create",
       "notes": "Flattens the structure and filters to only folders with exists == false. Sorts by depth so parents are created before children."
     },
@@ -134,10 +134,10 @@
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
       "position": [
-        2576,
-        32
+        3696,
+        -48
       ],
-      "id": "9609db8f-5d11-4e55-8d9d-8ea86919011e",
+      "id": "75cc05de-dfbf-4f82-ad59-07602a266dc3",
       "name": "Create Folder",
       "credentials": {
         "googleDriveOAuth2Api": {
@@ -155,11 +155,11 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        0,
-        0
+        1120,
+        -80
       ],
       "typeVersion": 1,
-      "id": "759c314e-fabe-44e2-a1e0-aa988a2a17fb",
+      "id": "5959f622-9997-43cb-8b34-761ebede2359",
       "name": "Sticky Note"
     },
     {
@@ -173,23 +173,23 @@
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.3,
       "position": [
-        336,
-        -64
+        1456,
+        -144
       ],
-      "id": "9b8020e8-d51b-4819-907a-876b1ec64426",
+      "id": "7b94ed0d-3e1f-467d-90d1-d3976d57a1f3",
       "name": "Schedule Trigger"
     },
     {
       "parameters": {
         "jsCode": "const folders = $json.folders || [];\n\nfunction collectMissing(structure, parentPath = \"\") {\n  let missing = [];\n  for (const node of structure) {\n    const currentPath = parentPath ? `${parentPath}/${node.name}` : node.name;\n    if (node.exists === false) {\n      missing.push(currentPath);\n    }\n    if (node.children && node.children.length > 0) {\n      missing = missing.concat(collectMissing(node.children, currentPath));\n    }\n  }\n  return missing;\n}\n\nconst missingList = collectMissing(folders);\nconst missingCount = missingList.length;\nconst missingFoldersText = missingList.join(\"\\n\");\n\nconsole.log(\"Missing folders:\", missingCount);\nconsole.log(\"Missing folders list:\", missingFoldersText);\n\nreturn [{ json: { folders, missingCount, hasMissing: missingCount > 0, missingFoldersText } }];"
       },
-      "id": "01222387-5957-4ed6-9042-ddaa22b554db",
+      "id": "64a12f02-69c1-4ada-ba49-f60406d32d25",
       "name": "Check Missing Folders",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1680,
-        32
+        2800,
+        -48
       ]
     },
     {
@@ -217,13 +217,13 @@
         "looseTypeValidation": true,
         "options": {}
       },
-      "id": "609dd1e4-16fd-405d-b817-f8c935ea7830",
+      "id": "65774cad-16e0-4897-a5f0-f7ef008f0347",
       "name": "Check If Missing",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        1904,
-        32
+        3024,
+        -48
       ]
     },
     {
@@ -232,20 +232,20 @@
         "select": "channel",
         "channelId": {
           "__rl": true,
-          "value": "C0ACLN0EM88",
+          "value": "C09VDS7UHSQ",
           "mode": "list",
-          "cachedResultName": "bot-testing"
+          "cachedResultName": "doc-governance-tmp"
         },
         "text": "=⚠️ Missing Google Drive Folders Detected\n\nFound {{ $json.missingCount }} missing folders in the desired structure.\n\nMissing folders:\n{{ $json.missingFoldersText }}\n\nPlease run the workflow again to create them.",
         "otherOptions": {}
       },
-      "id": "d2541332-82ef-482c-a6af-55ed9813c0c5",
+      "id": "428774b8-966d-4a84-889f-b8cb11c41d93",
       "name": "Send Slack Alert",
       "type": "n8n-nodes-base.slack",
       "typeVersion": 2.4,
       "position": [
-        2128,
-        -40
+        3248,
+        -128
       ],
       "webhookId": "ff3deda4-0438-4c03-ae91-5dfd7fe534ef",
       "credentials": {
@@ -263,10 +263,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        560,
-        32
+        1680,
+        -48
       ],
-      "id": "d793e4b8-5ded-42f5-92e9-eace2911b617",
+      "id": "eb6cc192-8878-45fa-8abf-55fbebd6e86b",
       "name": "HTTP Request GET Governed Folders",
       "notes": "Review the readme for instructions.\n\nhttps://github.com/InnerSourceCommons/foundation-governance/blob/master/shared-drive-structure/README.md"
     }
@@ -410,7 +410,7 @@
     "timeSavedMode": "dynamic",
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "88b487ca-733a-4d97-ad56-4133e187b1be",
+  "versionId": "c8c4cd81-b113-4218-828f-ea376a2660cf",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "42566e2b3b77f028e93e74b7c60d9194d35d5cfbf8340b4442416b191d1e3a55"

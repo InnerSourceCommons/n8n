@@ -6,10 +6,10 @@
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        336,
-        448
+        0,
+        192
       ],
-      "id": "85c48cca-13c5-4393-a6c6-841b660cccbb",
+      "id": "28bd7ce5-56b3-4fc5-9cb2-a06971917b0e",
       "name": "When clicking ‘Execute workflow’"
     },
     {
@@ -17,7 +17,7 @@
         "method": "POST",
         "url": "https://slack.com/api/conversations.open",
         "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "slackOAuth2Api",
+        "nodeCredentialType": "slackApi",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"users\": \"{{ $json.new_user_id }},U01UF8JNY5R,U4S1WTCHG,U07FM5PSB7T\"\n}",
@@ -26,15 +26,19 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        1008,
-        352
+        672,
+        96
       ],
-      "id": "2ac5a138-2d18-4e34-8255-5fbfac5f0d51",
+      "id": "af2bb429-347c-41cb-8c49-2887ddb17004",
       "name": "Open Slack Group Conversation",
       "credentials": {
         "slackOAuth2Api": {
-          "id": "H7foJgyMUJ9V0NzY",
-          "name": "Slack account"
+          "id": "jJUiNyM7wsenzEnu",
+          "name": "Slack OAuth2 API"
+        },
+        "slackApi": {
+          "id": "bQmwtArWlEan0get",
+          "name": "Slack account Bot Token"
         }
       }
     },
@@ -43,7 +47,7 @@
         "method": "POST",
         "url": "https://slack.com/api/chat.postMessage",
         "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "slackOAuth2Api",
+        "nodeCredentialType": "slackApi",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"channel\": \"{{ $json.channel.id }}\",\n  \"blocks\": {{ JSON.stringify($('Slack Welcome Message (Block Kit)').item.json.blocks) }}\n}",
@@ -52,15 +56,19 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        1232,
-        352
+        896,
+        96
       ],
-      "id": "b3b3d7f0-b152-451a-bbf6-6ce13d8f8127",
+      "id": "dc3191e0-bee3-4ea3-970f-012030411d63",
       "name": "Start Group Chat",
       "credentials": {
         "slackOAuth2Api": {
-          "id": "H7foJgyMUJ9V0NzY",
-          "name": "Slack account"
+          "id": "jJUiNyM7wsenzEnu",
+          "name": "Slack OAuth2 API"
+        },
+        "slackApi": {
+          "id": "bQmwtArWlEan0get",
+          "name": "Slack account Bot Token"
         }
       }
     },
@@ -87,10 +95,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        560,
-        352
+        224,
+        96
       ],
-      "id": "9f90a669-9406-47c3-9a6e-0331504a37ac",
+      "id": "b7c1e8fd-e745-4cb4-a23e-f3713c707182",
       "name": "Edit Fields"
     },
     {
@@ -108,16 +116,16 @@
       "type": "n8n-nodes-base.slackTrigger",
       "typeVersion": 1,
       "position": [
-        336,
-        256
+        0,
+        0
       ],
-      "id": "2d04d0c5-77f6-4b14-9e15-c1d16cde70eb",
+      "id": "9114935c-bd25-4ef0-a3f0-0802856149d6",
       "name": "New User Slack Trigger",
       "webhookId": "dbb44d52-6b1b-49b8-8015-222231497d5c",
       "credentials": {
         "slackApi": {
-          "id": "bR6EBrpyu6ZLwkX8",
-          "name": "Bot User OAuth Token"
+          "id": "V7TwxWut6XmtdEcs",
+          "name": "Slack account"
         }
       }
     },
@@ -128,10 +136,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        784,
-        352
+        448,
+        96
       ],
-      "id": "9d109f7d-8c87-44e4-b7c1-0ee50af37714",
+      "id": "ecb9ca3f-a50b-4f0e-9124-956ea0ad2914",
       "name": "Slack Welcome Message (Block Kit)"
     }
   ],
@@ -205,16 +213,16 @@
   "active": true,
   "settings": {
     "executionOrder": "v1",
+    "binaryMode": "separate",
     "availableInMCP": false,
     "timeSavedMode": "fixed",
-    "callerPolicy": "workflowsFromSameOwner",
-    "saveExecutionProgress": true
+    "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "ad9f93f7-2a1d-4fc8-9763-ce839c7f6c0f",
+  "versionId": "3e2a12a5-40e9-4c72-9a3f-3af12b3b7dc4",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "505d3f2effe3cea9c5bcf74fb293004bb613f932b3d6dd9cc01c7c68e9422333"
+    "instanceId": "42566e2b3b77f028e93e74b7c60d9194d35d5cfbf8340b4442416b191d1e3a55"
   },
-  "id": "_xX2w33EjbhHQE8nM9wHZ",
+  "id": "OPldvZLObaJrku8S",
   "tags": []
 }

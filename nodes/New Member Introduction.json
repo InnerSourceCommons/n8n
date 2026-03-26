@@ -124,8 +124,8 @@
       "webhookId": "dbb44d52-6b1b-49b8-8015-222231497d5c",
       "credentials": {
         "slackApi": {
-          "id": "V7TwxWut6XmtdEcs",
-          "name": "Slack account"
+          "id": "bQmwtArWlEan0get",
+          "name": "Slack account Bot Token"
         }
       }
     },
@@ -218,7 +218,7 @@
     "timeSavedMode": "fixed",
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "3e2a12a5-40e9-4c72-9a3f-3af12b3b7dc4",
+  "versionId": "de7a633d-31cc-4c66-8703-a2ed17d74202",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "42566e2b3b77f028e93e74b7c60d9194d35d5cfbf8340b4442416b191d1e3a55"

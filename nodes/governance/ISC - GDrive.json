@@ -88,7 +88,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Compare desired structure with actual structure\n// Include ALL folders with exists: true/false field\n\n// Decode HTML entities that n8n expression rendering may introduce\nfunction decodeHtmlEntities(str) {\n  return str\n    .replace(/&amp;/g, '&')\n    .replace(/&lt;/g, '<')\n    .replace(/&gt;/g, '>')\n    .replace(/&quot;/g, '\"')\n    .replace(/&#39;/g, \"'\");\n}\n\n// Recursively decode HTML entities in all name fields\nfunction decodeNames(nodes) {\n  return nodes.map(node => {\n    const decoded = { ...node, name: decodeHtmlEntities(node.name) };\n    if (decoded.children && decoded.children.length > 0) {\n      decoded.children = decodeNames(decoded.children);\n    }\n    return decoded;\n  });\n}\n\nconst rawDesired = typeof $('Set Configuration').first().json.desiredStructure === 'string'\n  ? JSON.parse($('Set Configuration').first().json.desiredStructure)\n  : $('Set Configuration').first().json.desiredStructure;\n\nconst desiredStructure = decodeNames(rawDesired);\n\nconst actualStructure = $json.actualStructure || [];\n\nconsole.log('Desired structure:', JSON.stringify(desiredStructure, null, 2));\nconsole.log('Actual structure:', JSON.stringify(actualStructure, null, 2));\n\n// Build a lookup map: parentName -> Map<childName, exists>\n// This allows us to check if a folder exists by its name and parent context\nfunction buildNameMap(structure, parentName = null) {\n  const nameMap = new Map(); // parentName -> Set<childNames>\n  \n  function processNode(node, parent) {\n    const parentKey = parent || 'ROOT';\n    if (!nameMap.has(parentKey)) {\n      nameMap.set(parentKey, new Set());\n    }\n    nameMap.get(parentKey).add(node.name);\n    \n    if (node.children && node.children.length > 0) {\n      for (const child of node.children) {\n        processNode(child, node.name);\n      }\n    }\n  }\n  \n  for (const node of structure) {\n    processNode(node, null);\n  }\n  \n  return nameMap;\n}\n\nconst actualNameMap = buildNameMap(actualStructure);\n\nconsole.log('Actual name map:', JSON.stringify(\n  Array.from(actualNameMap.entries()).map(([k, v]) => [k, Array.from(v)]),\n  null, 2\n));\n\n// Function to check if a folder exists by name and parent\nfunction folderExists(folderName, parentName = null) {\n  const parentKey = parentName || 'ROOT';\n  const exists = actualNameMap.has(parentKey) && actualNameMap.get(parentKey).has(folderName);\n  \n  // Debug: log what we're checking\n  if (!exists) {\n    console.log(`  Folder NOT found: name=\"${folderName}\", parent=\"${parentKey}\"`);\n    if (actualNameMap.has(parentKey)) {\n      console.log(`  Available children in ${parentKey}:`, Array.from(actualNameMap.get(parentKey)));\n    } else {\n      console.log(`  Parent ${parentKey} not found in actual structure`);\n    }\n  } else {\n    console.log(`  ✓ Folder found: name=\"${folderName}\", parent=\"${parentKey}\"`);\n  }\n  \n  return exists;\n}\n\n// Function to recursively check folders and add exists field\nfunction checkFolders(desiredNode, parentName = null) {\n  const exists = folderExists(desiredNode.name, parentName);\n  \n  console.log(`Checking folder: ${desiredNode.name}, parent: ${parentName || 'ROOT'}, exists: ${exists}`);\n  \n  const result = {\n    name: desiredNode.name,\n    exists: exists\n  };\n  \n  // Check children - always include all children\n  if (desiredNode.children && desiredNode.children.length > 0) {\n    result.children = desiredNode.children.map(child => \n      checkFolders(child, desiredNode.name)\n    );\n  }\n  \n  return result;\n}\n\n// Check all folders\nconst folderStatus = desiredStructure.map(node => checkFolders(node));\n\nconsole.log('Folder status:', JSON.stringify(folderStatus, null, 2));\n\nreturn [{ json: { folders: folderStatus } }];"
+        "jsCode": "// Compare desired structure with actual structure\n// Include ALL folders with exists: true/false field\n\n// Decode HTML entities that n8n expression rendering may introduce\nfunction decodeHtmlEntities(str) {\n  return str\n    .replace(/&amp;/g, '&')\n    .replace(/&lt;/g, '<')\n    .replace(/&gt;/g, '>')\n    .replace(/&quot;/g, '\"')\n    .replace(/&#39;/g, \"'\");\n}\n\n// Recursively decode HTML entities in all name fields\nfunction decodeNames(nodes) {\n  return nodes.map(node => {\n    const decoded = { ...node, name: decodeHtmlEntities(node.name) };\n    if (decoded.children && decoded.children.length > 0) {\n      decoded.children = decodeNames(decoded.children);\n    }\n    return decoded;\n  });\n}\n\nconst rawDesired = typeof $('Set Configuration').first().json.desiredStructure === 'string'\n  ? JSON.parse($('Set Configuration').first().json.desiredStructure)\n  : $('Set Configuration').first().json.desiredStructure;\n\nconst desiredStructure = decodeNames(rawDesired);\n\nconst actualStructure = $json.actualStructure || [];\n\nconsole.log('Desired structure:', JSON.stringify(desiredStructure, null, 2));\nconsole.log('Actual structure:', JSON.stringify(actualStructure, null, 2));\n\n// Build a lookup map: parentName -> Map<childName, exists>\n// This allows us to check if a folder exists by its name and parent context\nfunction buildNameMap(structure, parentName = null) {\n  const nameMap = new Map(); // parentName -> Set<childNames>\n  \n  function processNode(node, parent) {\n    const parentKey = parent || 'ROOT';\n    if (!nameMap.has(parentKey)) {\n      nameMap.set(parentKey, new Set());\n    }\n    nameMap.get(parentKey).add(node.name);\n    \n    if (node.children && node.children.length > 0) {\n      for (const child of node.children) {\n        processNode(child, node.name);\n      }\n    }\n  }\n  \n  for (const node of structure) {\n    processNode(node, null);\n  }\n  \n  return nameMap;\n}\n\nconst actualNameMap = buildNameMap(actualStructure);\n\nconsole.log('Actual name map:', JSON.stringify(\n  Array.from(actualNameMap.entries()).map(([k, v]) => [k, Array.from(v)]),\n  null, 2\n));\n\n// Function to check if a folder exists by name and parent\nfunction folderExists(folderName, parentName = null) {\n  const parentKey = parentName || 'ROOT';\n  const exists = actualNameMap.has(parentKey) && actualNameMap.get(parentKey).has(folderName);\n  \n  // Debug: log what we're checking\n  if (!exists) {\n    console.log(`  Folder NOT found: name=\"${folderName}\", parent=\"${parentKey}\"`);\n    if (actualNameMap.has(parentKey)) {\n      console.log(`  Available children in ${parentKey}:`, Array.from(actualNameMap.get(parentKey)));\n    } else {\n      console.log(`  Parent ${parentKey} not found in actual structure`);\n    }\n  } else {\n    console.log(`  ✓ Folder found: name=\"${folderName}\", parent=\"${parentKey}\"`);\n  }\n  \n  return exists;\n}\n\n// Function to recursively check folders and add exists field\nfunction checkFolders(desiredNode, parentName = null) {\n  const exists = folderExists(desiredNode.name, parentName);\n  \n  console.log(`Checking folder: ${desiredNode.name}, parent: ${parentName || 'ROOT'}, exists: ${exists}`);\n  \n  const result = {\n    name: desiredNode.name,\n    exists: exists\n  };\n  \n  if (desiredNode.description) {\n    result.description = desiredNode.description;\n  }\n  \n  // Check children - always include all children\n  if (desiredNode.children && desiredNode.children.length > 0) {\n    result.children = desiredNode.children.map(child => \n      checkFolders(child, desiredNode.name)\n    );\n  }\n  \n  return result;\n}\n\n// Check all folders\nconst folderStatus = desiredStructure.map(node => checkFolders(node));\n\nconsole.log('Folder status:', JSON.stringify(folderStatus, null, 2));\n\nreturn [{ json: { folders: folderStatus } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -102,7 +102,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Flatten structure and produce a list of folders to create for THIS run.\n// - Only output folders where `exists === false` AND the parent already exists.\n// - Compute parentFolderId from the current Drive state (Build Actual Structure).\n//\n// On first run: only top-level folders are created.\n// On second run: their children are created.\n// On third run: grandchildren, etc.\n//\n// You keep running the workflow until it logs \"0 folders to create\".\n\n// --- CONFIG & INPUT ---\n\nconst rootFolderId = $('Set Configuration').first().json.rootFolderId;\nconst mainFolderId = rootFolderId;\n\nconsole.log('Using rootFolderId as mainFolderId:', mainFolderId);\n\n// This comes from \"Check Missing Folders\"\nconst folderStatusTree = $('Check Missing Folders').first().json.folders || [];\n\n// From \"Build Actual Structure\" (current Drive state)\nconst actualStructure = $('Build Actual Structure').first().json.actualStructure || [];\nconst allFolders = $('Build Actual Structure').first().json.allFolders || [];\n\nconsole.log('Actual structure nodes:', actualStructure.length);\nconsole.log('Total folders in allFolders:', allFolders.length);\n\n// --- BUILD path -> folderId MAP FROM CURRENT DRIVE STATE ---\n\n// We'll reconstruct full paths like \"00 – Governance/Charter\"\nconst pathToId = new Map();\n\nfunction buildPathMap(structure, parentPath = '', parentId = mainFolderId) {\n  for (const node of structure) {\n    const currentPath = parentPath ? `${parentPath}/${node.name}` : node.name;\n\n    // Find the matching folder from allFolders by name + parentId\n    const folder = allFolders.find(f => {\n      const fParentId = f.parents && f.parents.length > 0 ? f.parents[0] : rootFolderId;\n      return f.name === node.name && fParentId === parentId;\n    });\n\n    if (folder) {\n      pathToId.set(currentPath, folder.id);\n      // Recurse into children\n      if (node.children && node.children.length > 0) {\n        buildPathMap(node.children, currentPath, folder.id);\n      }\n    }\n  }\n}\n\nbuildPathMap(actualStructure);\n\nconsole.log('Existing paths in Drive:');\nfor (const [p, id] of pathToId.entries()) {\n  console.log(`  ${p} -> ${id}`);\n}\n\n// --- FLATTEN DESIRED STRUCTURE (with exists flags) ---\n// We only output folders where:\n//   - node.exists === false\n//   - the parent \"exists\" right now (either root or in pathToId / actualStructure)\n\nfunction flattenForCreation(structure, parentPath = '', parentName = null, depth = 0, parentExists = true) {\n  const result = [];\n\n  for (const node of structure) {\n    const currentPath = parentPath ? `${parentPath}/${node.name}` : node.name;\n    const thisExists = node.exists === true;\n\n    // Decide if THIS node should be created in this run\n    // Only when it doesn't exist yet, and its parent exists.\n    if (!thisExists && parentExists) {\n      let parentFolderId;\n\n      if (!parentPath) {\n        // Top-level folder under the main/root folder\n        parentFolderId = mainFolderId;\n      } else {\n        // Parent is some subfolder; look it up by its full path\n        parentFolderId = pathToId.get(parentPath) || mainFolderId;\n      }\n\n      console.log(\n        `Scheduling create: \"${currentPath}\" ` +\n        `(depth ${depth}, parentPath=\"${parentPath}\", parentFolderId=${parentFolderId})`\n      );\n\n      result.push({\n        name: node.name,\n        path: currentPath,\n        parentPath,\n        parentName,\n        depth,\n        parentFolderId,\n      });\n    } else {\n      console.log(\n        `Skipping for now: \"${currentPath}\" (exists=${thisExists}, parentExists=${parentExists})`\n      );\n    }\n\n    // Children: their parent \"exists\" if:\n    //  - this node already exists in Drive (thisExists === true), OR\n    //  - we have a path->id entry for it (i.e., it existed before this run).\n    const childParentExists = thisExists || pathToId.has(currentPath);\n\n    if (node.children && node.children.length > 0) {\n      const childResults = flattenForCreation(\n        node.children,\n        currentPath,\n        node.name,\n        depth + 1,\n        childParentExists,\n      );\n      result.push(...childResults);\n    }\n  }\n\n  return result;\n}\n\nconst flattened = flattenForCreation(folderStatusTree);\n\n// Sort by depth so parents of this batch are before children of this batch\nflattened.sort((a, b) => a.depth - b.depth);\n\nconsole.log(`\\nFound ${flattened.length} folders to create in THIS run:`);\nflattened.forEach(f =>\n  console.log(\n    `  [depth ${f.depth}] ${f.path} (parentPath=\"${f.parentPath}\", parentFolderId=${f.parentFolderId})`,\n  ),\n);\n\n// Output each folder as a separate item\nconst outputItems = flattened.map(folder => ({\n  json: {\n    ...folder,\n    mainFolderId,\n    rootFolderId,\n  },\n}));\n\nconsole.log(`\\n=== OUTPUT: Returning ${outputItems.length} items ===`);\n\nreturn outputItems;\n"
+        "jsCode": "// Flatten structure and produce a list of folders to create for THIS run.\n// - Only output folders where `exists === false` AND the parent already exists.\n// - Compute parentFolderId from the current Drive state (Build Actual Structure).\n//\n// On first run: only top-level folders are created.\n// On second run: their children are created.\n// On third run: grandchildren, etc.\n//\n// You keep running the workflow until it logs \"0 folders to create\".\n\n// --- CONFIG & INPUT ---\n\nconst rootFolderId = $('Set Configuration').first().json.rootFolderId;\nconst mainFolderId = rootFolderId;\n\nconsole.log('Using rootFolderId as mainFolderId:', mainFolderId);\n\n// This comes from \"Check Missing Folders\"\nconst folderStatusTree = $('Check Missing Folders').first().json.folders || [];\n\n// From \"Build Actual Structure\" (current Drive state)\nconst actualStructure = $('Build Actual Structure').first().json.actualStructure || [];\nconst allFolders = $('Build Actual Structure').first().json.allFolders || [];\n\nconsole.log('Actual structure nodes:', actualStructure.length);\nconsole.log('Total folders in allFolders:', allFolders.length);\n\n// --- BUILD path -> folderId MAP FROM CURRENT DRIVE STATE ---\n\n// We'll reconstruct full paths like \"00 – Governance/Charter\"\nconst pathToId = new Map();\n\nfunction buildPathMap(structure, parentPath = '', parentId = mainFolderId) {\n  for (const node of structure) {\n    const currentPath = parentPath ? `${parentPath}/${node.name}` : node.name;\n\n    // Find the matching folder from allFolders by name + parentId\n    const folder = allFolders.find(f => {\n      const fParentId = f.parents && f.parents.length > 0 ? f.parents[0] : rootFolderId;\n      return f.name === node.name && fParentId === parentId;\n    });\n\n    if (folder) {\n      pathToId.set(currentPath, folder.id);\n      // Recurse into children\n      if (node.children && node.children.length > 0) {\n        buildPathMap(node.children, currentPath, folder.id);\n      }\n    }\n  }\n}\n\nbuildPathMap(actualStructure);\n\nconsole.log('Existing paths in Drive:');\nfor (const [p, id] of pathToId.entries()) {\n  console.log(`  ${p} -> ${id}`);\n}\n\n// --- FLATTEN DESIRED STRUCTURE (with exists flags) ---\n// We only output folders where:\n//   - node.exists === false\n//   - the parent \"exists\" right now (either root or in pathToId / actualStructure)\n\nfunction flattenForCreation(structure, parentPath = '', parentName = null, depth = 0, parentExists = true) {\n  const result = [];\n\n  for (const node of structure) {\n    const currentPath = parentPath ? `${parentPath}/${node.name}` : node.name;\n    const thisExists = node.exists === true;\n\n    // Decide if THIS node should be created in this run\n    // Only when it doesn't exist yet, and its parent exists.\n    if (!thisExists && parentExists) {\n      let parentFolderId;\n\n      if (!parentPath) {\n        // Top-level folder under the main/root folder\n        parentFolderId = mainFolderId;\n      } else {\n        // Parent is some subfolder; look it up by its full path\n        parentFolderId = pathToId.get(parentPath) || mainFolderId;\n      }\n\n      console.log(\n        `Scheduling create: \"${currentPath}\" ` +\n        `(depth ${depth}, parentPath=\"${parentPath}\", parentFolderId=${parentFolderId})`\n      );\n\n      result.push({\n        name: node.name,\n        description: node.description || '',\n        path: currentPath,\n        parentPath,\n        parentName,\n        depth,\n        parentFolderId,\n      });\n    } else {\n      console.log(\n        `Skipping for now: \"${currentPath}\" (exists=${thisExists}, parentExists=${parentExists})`\n      );\n    }\n\n    // Children: their parent \"exists\" if:\n    //  - this node already exists in Drive (thisExists === true), OR\n    //  - we have a path->id entry for it (i.e., it existed before this run).\n    const childParentExists = thisExists || pathToId.has(currentPath);\n\n    if (node.children && node.children.length > 0) {\n      const childResults = flattenForCreation(\n        node.children,\n        currentPath,\n        node.name,\n        depth + 1,\n        childParentExists,\n      );\n      result.push(...childResults);\n    }\n  }\n\n  return result;\n}\n\nconst flattened = flattenForCreation(folderStatusTree);\n\n// Sort by depth so parents of this batch are before children of this batch\nflattened.sort((a, b) => a.depth - b.depth);\n\nconsole.log(`\\nFound ${flattened.length} folders to create in THIS run:`);\nflattened.forEach(f =>\n  console.log(\n    `  [depth ${f.depth}] ${f.path} (parentPath=\"${f.parentPath}\", parentFolderId=${f.parentFolderId})`,\n  ),\n);\n\n// Output each folder as a separate item\nconst outputItems = flattened.map(folder => ({\n  json: {\n    ...folder,\n    mainFolderId,\n    rootFolderId,\n  },\n}));\n\nconsole.log(`\\n=== OUTPUT: Returning ${outputItems.length} items ===`);\n\nreturn outputItems;\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -149,7 +149,7 @@
     },
     {
       "parameters": {
-        "content": "## Workflow Overview\n\nThis workflow creates a hierarchical folder structure in Google Drive by comparing a desired structure definition with the current Drive state.\n\n**How it works:**\n1. Fetches all folders from Google Drive and builds a hierarchical tree\n2. Compares desired structure with actual structure, marking each folder with `exists: true/false`\n3. Checks if any folders are missing and sends a Slack alert if so\n4. Identifies folders to create: only those where `exists === false` AND their parent already exists\n5. Creates folders in batches (run multiple times until all folders are created)\n\n**Usage:** Run the workflow repeatedly until it logs \"0 folders to create\" - this ensures parents are created before children.",
+        "content": "## Workflow Overview\n\nThis workflow creates a hierarchical folder structure in Google Drive by comparing a desired structure definition with the current Drive state.\n\n**How it works:**\n1. Fetches all folders from Google Drive and builds a hierarchical tree\n2. Compares desired structure with actual structure, marking each folder with `exists: true/false`\n3. Checks if any folders are missing and sends a Slack alert if so\n4. Identifies folders to create: only those where `exists === false` AND their parent already exists\n5. Creates folders in batches (run multiple times until all folders are created)\n6. Updates folder descriptions from the `description` field in the desired structure via the Drive API\n\n**Usage:** Run the workflow repeatedly until it logs \"0 folders to create\" - this ensures parents are created before children.",
         "height": 544,
         "width": 272
       },
@@ -251,7 +251,7 @@
       "credentials": {
         "slackOAuth2Api": {
           "id": "jJUiNyM7wsenzEnu",
-          "name": "Slack OAuth2 API"
+          "name": "Slack OAuth2 API Not Working"
         }
       }
     },
@@ -269,6 +269,74 @@
       "id": "eb6cc192-8878-45fa-8abf-55fbebd6e86b",
       "name": "HTTP Request GET Governed Folders",
       "notes": "Review the readme for instructions.\n\nhttps://github.com/InnerSourceCommons/foundation-governance/blob/master/shared-drive-structure/README.md"
+    },
+    {
+      "parameters": {
+        "jsCode": "const folders = $json.folders || [];\nconst allFolders = $('Build Actual Structure').first().json.allFolders || [];\nconst rootFolderId = $('Set Configuration').first().json.rootFolderId;\n\nconst folderLookup = new Map();\nfor (const f of allFolders) {\n  const parentId = f.parents && f.parents.length > 0 ? f.parents[0] : rootFolderId;\n  folderLookup.set(`${parentId}::${f.name}`, f.id);\n}\n\nconst results = [];\n\nfunction collect(nodes, parentFolderId) {\n  for (const node of nodes) {\n    const key = `${parentFolderId}::${node.name}`;\n    const folderId = folderLookup.get(key);\n\n    if (folderId && node.description) {\n      results.push({\n        json: {\n          folderId,\n          name: node.name,\n          description: node.description\n        }\n      });\n    }\n\n    if (folderId && node.children && node.children.length > 0) {\n      collect(node.children, folderId);\n    }\n  }\n}\n\ncollect(folders, rootFolderId);\n\nconsole.log(`Found ${results.length} existing folders with descriptions to update`);\n\nreturn results.length > 0 ? results : [];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2800,
+        200
+      ],
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "name": "Collect Existing Folder Descriptions",
+      "notes": "Collects existing folders that have a description field and resolves their Drive folder IDs for updating."
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://www.googleapis.com/drive/v3/files/{{ $json.folderId }}?supportsAllDrives=true",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ description: $json.description }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3024,
+        200
+      ],
+      "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+      "name": "Update Existing Folder Description",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "D6a6BbZD8vh3t1eB",
+          "name": "Google Drive OAuth2 API"
+        }
+      },
+      "notes": "PATCHes the description field on existing Google Drive folders via the Drive API. Requires 'Allow HTTP Request' enabled on the credential."
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://www.googleapis.com/drive/v3/files/{{ $json.id }}?supportsAllDrives=true",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ description: $('Flatten Folders to Create').item.json.description || '' }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3920,
+        -48
+      ],
+      "id": "c3d4e5f6-a7b8-9012-cdef-123456789012",
+      "name": "Update New Folder Description",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "D6a6BbZD8vh3t1eB",
+          "name": "Google Drive OAuth2 API"
+        }
+      },
+      "notes": "PATCHes the description on newly created Google Drive folders via the Drive API. Requires 'Allow HTTP Request' enabled on the credential."
     }
   ],
   "pinData": {},
@@ -357,6 +425,11 @@
             "node": "Check If Missing",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Collect Existing Folder Descriptions",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -395,6 +468,28 @@
         [
           {
             "node": "Set Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect Existing Folder Descriptions": {
+      "main": [
+        [
+          {
+            "node": "Update Existing Folder Description",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Folder": {
+      "main": [
+        [
+          {
+            "node": "Update New Folder Description",
             "type": "main",
             "index": 0
           }

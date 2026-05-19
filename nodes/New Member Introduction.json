@@ -26,7 +26,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        672,
+        880,
         96
       ],
       "id": "af2bb429-347c-41cb-8c49-2887ddb17004",
@@ -34,7 +34,7 @@
       "credentials": {
         "slackOAuth2Api": {
           "id": "jJUiNyM7wsenzEnu",
-          "name": "Slack OAuth2 API"
+          "name": "Slack OAuth2 API Not Working"
         },
         "slackApi": {
           "id": "bQmwtArWlEan0get",
@@ -56,7 +56,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        896,
+        1104,
         96
       ],
       "id": "dc3191e0-bee3-4ea3-970f-012030411d63",
@@ -64,11 +64,11 @@
       "credentials": {
         "slackOAuth2Api": {
           "id": "jJUiNyM7wsenzEnu",
-          "name": "Slack OAuth2 API"
+          "name": "Slack OAuth2 API Not Working"
         },
         "slackApi": {
-          "id": "bQmwtArWlEan0get",
-          "name": "Slack account Bot Token"
+          "id": "o66cfc6R3mGF1lOn",
+          "name": "Jeff's auth token"
         }
       }
     },
@@ -136,11 +136,26 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        448,
+        656,
         96
       ],
       "id": "ecb9ca3f-a50b-4f0e-9124-956ea0ad2914",
       "name": "Slack Welcome Message (Block Kit)"
+    },
+    {
+      "parameters": {
+        "amount": 1,
+        "unit": "hours"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        432,
+        96
+      ],
+      "id": "a7715dfe-15e7-4747-af5b-9e94e06a4dd3",
+      "name": "Wait1Hr",
+      "webhookId": "9388f234-4406-4f57-af37-7f134c58d22c"
     }
   ],
   "pinData": {
@@ -180,7 +195,7 @@
       "main": [
         [
           {
-            "node": "Slack Welcome Message (Block Kit)",
+            "node": "Wait1Hr",
             "type": "main",
             "index": 0
           }
@@ -208,6 +223,17 @@
           }
         ]
       ]
+    },
+    "Wait1Hr": {
+      "main": [
+        [
+          {
+            "node": "Slack Welcome Message (Block Kit)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
@@ -218,7 +244,7 @@
     "timeSavedMode": "fixed",
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "de7a633d-31cc-4c66-8703-a2ed17d74202",
+  "versionId": "8be3e285-8374-41a8-bc48-9aabb2f34593",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "42566e2b3b77f028e93e74b7c60d9194d35d5cfbf8340b4442416b191d1e3a55"

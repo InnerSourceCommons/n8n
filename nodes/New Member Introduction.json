@@ -20,7 +20,7 @@
         "nodeCredentialType": "slackApi",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"users\": \"{{ $json.new_user_id }},U01UF8JNY5R,U4S1WTCHG,U07FM5PSB7T\"\n}",
+        "jsonBody": "={\n  \"users\": \"{{ $json.new_user_id }},U01UF8JNY5R,U4S1WTCHG\"\n}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
@@ -37,8 +37,8 @@
           "name": "Slack OAuth2 API Not Working"
         },
         "slackApi": {
-          "id": "bQmwtArWlEan0get",
-          "name": "Slack account Bot Token"
+          "id": "o66cfc6R3mGF1lOn",
+          "name": "Jeff's auth token"
         }
       }
     },
@@ -244,7 +244,7 @@
     "timeSavedMode": "fixed",
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "8be3e285-8374-41a8-bc48-9aabb2f34593",
+  "versionId": "c4bb1a8b-6a79-4a48-993b-3e165a80d75e",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "42566e2b3b77f028e93e74b7c60d9194d35d5cfbf8340b4442416b191d1e3a55"

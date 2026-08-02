@@ -3,7 +3,6 @@
   "nodes": [
     {
       "parameters": {
-        "authentication": "oAuth2",
         "select": "channel",
         "channelId": {
           "__rl": true,
@@ -11,7 +10,7 @@
           "mode": "name"
         },
         "messageType": "block",
-        "blocksUi": "={\n\t\"blocks\": [\n\t\t{\n\t\t\t\"type\": \"section\",\n\t\t\t\"text\": {\n\t\t\t\t\"type\": \"mrkdwn\",\n\t\t\t\t\"text\": \"<!here>\\n\\n*Reminder:*\\n\\n ISPO Working Group call happens {{ $json.utcDate.dayofweekname }} at {{ $json.query.time }} UTC :tada:\\n\\nThis is an excellent meeting for newcomers looking to learn about InnerSource. All are welcome to join!\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"type\": \"divider\"\n\t\t},\n\t\t{\n\t\t\t\"type\": \"section\",\n\t\t\t\"text\": {\n\t\t\t\t\"type\": \"mrkdwn\",\n\t\t\t\t\"text\": \"*This meeting's topic:*\\n\\n{{ $json.query.topic }}\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"type\": \"divider\"\n\t\t},\n\t\t{\n\t\t\t\"type\": \"section\",\n\t\t\t\"fields\": [\n\t\t\t\t{\n\t\t\t\t\t\"type\": \"mrkdwn\",\n\t\t\t\t\t\"text\": \":spiral_calendar_pad: *Date:*\\n\\n{{ $json.utcDate.dayofweekname }}, {{ $json.utcDate.monthname}} {{ $json.utcDate.ordinal }}\"\n\t\t\t\t},\n\t\t\t\t{\n\t\t\t\t\t\"type\": \"mrkdwn\",\n\t\t\t\t\t\"text\": \":alarm_clock: *Time:*\\n\\nMultiple time zones below\"\n\t\t\t\t}\n\t\t\t]\n\t\t},\n\t\t{\n\t\t\t\"type\": \"section\",\n\t\t\t\"text\": {\n\t\t\t\t\"type\": \"mrkdwn\",\n\t\t\t\t\"text\": \"*Time Zones:*\\n {{ $json.utcDate.timeZonesText }}\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"type\": \"divider\"\n\t\t},\n\t\t{\n\t\t\t\"type\": \"section\",\n\t\t\t\"text\": {\n\t\t\t\t\"type\": \"mrkdwn\",\n\t\t\t\t\"text\": \":link: <{{ $json.query.meeting_notes_url }}|Meeting Notes>\\n :link: <https://innersourcecommons.org/calendar/|InnerSource Commons Calendar>\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"type\": \"actions\",\n\t\t\t\"elements\": [\n\t\t\t\t{\n\t\t\t\t\t\"type\": \"button\",\n\t\t\t\t\t\"text\": {\n\t\t\t\t\t\t\"type\": \"plain_text\",\n\t\t\t\t\t\t\"text\": \"Join Meeting\",\n\t\t\t\t\t\t\"emoji\": true\n\t\t\t\t\t},\n\t\t\t\t\t\"url\": \"https://us06web.zoom.us/j/84987611486?pwd=Biw6cc9UwWI6FrM51Ugox10sClIP6n.1\",\n\t\t\t\t\t\"style\": \"danger\"\n\t\t\t\t}\n\t\t\t]\n\t\t}\n\t]\n}",
+        "blocksUi": "={\n\t\"blocks\": [\n\t\t{\n\t\t\t\"type\": \"section\",\n\t\t\t\"text\": {\n\t\t\t\t\"type\": \"mrkdwn\",\n\t\t\t\t\"text\": \"<!here>\\n\\n*Reminder:*\\n\\n InnerSource Working Group call happens {{ $json.utcDate.dayofweekname }} at {{ $json.query.time }} UTC :tada:\\n\\nThis is an excellent meeting for newcomers looking to learn about InnerSource. All are welcome to join!\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"type\": \"divider\"\n\t\t},\n\t\t{\n\t\t\t\"type\": \"section\",\n\t\t\t\"text\": {\n\t\t\t\t\"type\": \"mrkdwn\",\n\t\t\t\t\"text\": \"*This meeting's topic:*\\n\\n{{ $json.query.topic }}\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"type\": \"divider\"\n\t\t},\n\t\t{\n\t\t\t\"type\": \"section\",\n\t\t\t\"fields\": [\n\t\t\t\t{\n\t\t\t\t\t\"type\": \"mrkdwn\",\n\t\t\t\t\t\"text\": \":spiral_calendar_pad: *Date:*\\n\\n{{ $json.utcDate.dayofweekname }}, {{ $json.utcDate.monthname}} {{ $json.utcDate.ordinal }}\"\n\t\t\t\t},\n\t\t\t\t{\n\t\t\t\t\t\"type\": \"mrkdwn\",\n\t\t\t\t\t\"text\": \":alarm_clock: *Time:*\\n\\nMultiple time zones below\"\n\t\t\t\t}\n\t\t\t]\n\t\t},\n\t\t{\n\t\t\t\"type\": \"section\",\n\t\t\t\"text\": {\n\t\t\t\t\"type\": \"mrkdwn\",\n\t\t\t\t\"text\": \"*Time Zones:*\\n {{ $json.utcDate.timeZonesText }}\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"type\": \"divider\"\n\t\t},\n\t\t{\n\t\t\t\"type\": \"section\",\n\t\t\t\"text\": {\n\t\t\t\t\"type\": \"mrkdwn\",\n\t\t\t\t\"text\": \":link: <{{ $json.query.meeting_notes_url }}|Meeting Notes>\\n :link: <https://innersourcecommons.org/calendar/|InnerSource Commons Calendar>\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"type\": \"actions\",\n\t\t\t\"elements\": [\n\t\t\t\t{\n\t\t\t\t\t\"type\": \"button\",\n\t\t\t\t\t\"text\": {\n\t\t\t\t\t\t\"type\": \"plain_text\",\n\t\t\t\t\t\t\"text\": \"Join Meeting\",\n\t\t\t\t\t\t\"emoji\": true\n\t\t\t\t\t},\n\t\t\t\t\t\"url\": \"https://us06web.zoom.us/j/84987611486?pwd=Biw6cc9UwWI6FrM51Ugox10sClIP6n.1\",\n\t\t\t\t\t\"style\": \"danger\"\n\t\t\t\t}\n\t\t\t]\n\t\t}\n\t]\n}",
         "text": "=",
         "otherOptions": {
           "includeLinkToWorkflow": "={{ false }}",
@@ -26,13 +25,13 @@
         1104,
         0
       ],
-      "id": "f3bf08c3-e0b1-4fa5-bd8f-0b9777a84ec2",
+      "id": "fe1fab88-1536-424b-a906-74a49c9d4ea0",
       "name": "Send a message",
       "webhookId": "a98506f5-5fff-49f7-acfe-9faab97fe78e",
       "credentials": {
-        "slackOAuth2Api": {
-          "id": "H7foJgyMUJ9V0NzY",
-          "name": "Slack account"
+        "slackApi": {
+          "id": "bQmwtArWlEan0get",
+          "name": "Slack account Bot Token"
         }
       }
     },
@@ -44,7 +43,7 @@
         0,
         0
       ],
-      "id": "001067c6-2048-46d5-97c7-8cc667d13460",
+      "id": "96aadeff-b3c4-4353-a131-45a8220cbc77",
       "name": "When clicking ‘Execute workflow’"
     },
     {
@@ -68,20 +67,20 @@
         448,
         0
       ],
-      "id": "54592370-09ac-4d56-99d6-ca49c2151252",
+      "id": "ab2c662a-a465-4551-a88e-1154e68f74ab",
       "name": "Prepare UTC Date"
     },
     {
       "parameters": {
-        "jsCode": "const item = $input.first().json;\nconst d = item.utcDate;\nconst q = item.query;\nconst blocks = {\n  blocks: [\n    { type: 'section', text: { type: 'mrkdwn', text: `<!here> Reminder: ISPO Working Group call happens ${d.dayofweekname} at ${q.time} UTC :tada:\\n\\nThis is an excellent meeting for newcomers looking to learn about InnerSource. All are welcome to join!` } },\n    { type: 'divider' },\n    { type: 'section', text: { type: 'mrkdwn', text: `*This meeting's topic:*\\n\\n${q.topic}` } },\n    { type: 'divider' },\n    { type: 'section', fields: [\n      { type: 'mrkdwn', text: `:spiral_calendar_pad: *Date:*\\n${d.dayofweekname}, ${d.monthname} ${d.ordinal}` },\n      { type: 'mrkdwn', text: ':alarm_clock: *Time:*\\nMultiple time zones below' }\n    ] },\n    { type: 'section', text: { type: 'mrkdwn', text: `*Time Zones:*\\n${d.timeZonesText}` } },\n    { type: 'divider' },\n    { type: 'section', text: { type: 'mrkdwn', text: `:link: <${q.meeting_notes_url}>\\n:link: <https://innersourcecommons.org/calendar/|InnerSource Commons Calendar>` } },\n    { type: 'actions', elements: [ { type: 'button', text: { type: 'plain_text', text: 'Join Meeting', emoji: true }, url: 'https://us06web.zoom.us/j/84987611486?pwd=Biw6cc9UwWI6FrM51Ugox10sClIP6n.1', style: 'danger' } ] }\n  ]\n};\nreturn [{ json: { ...item, blocks } }];"
+        "jsCode": "const item = $input.first().json;\nconst d = item.utcDate;\nconst q = item.query;\nconst blocks = {\n  blocks: [\n    { type: 'section', text: { type: 'mrkdwn', text: `<!here> Reminder: InnerSource Working Group call happens ${d.dayofweekname} at ${q.time} UTC :tada:\\n\\nThis is an excellent meeting for newcomers looking to learn about InnerSource. All are welcome to join!` } },\n    { type: 'divider' },\n    { type: 'section', text: { type: 'mrkdwn', text: `*This meeting's topic:*\\n\\n${q.topic}` } },\n    { type: 'divider' },\n    { type: 'section', fields: [\n      { type: 'mrkdwn', text: `:spiral_calendar_pad: *Date:*\\n${d.dayofweekname}, ${d.monthname} ${d.ordinal}` },\n      { type: 'mrkdwn', text: ':alarm_clock: *Time:*\\nMultiple time zones below' }\n    ] },\n    { type: 'section', text: { type: 'mrkdwn', text: `*Time Zones:*\\n${d.timeZonesText}` } },\n    { type: 'divider' },\n    { type: 'section', text: { type: 'mrkdwn', text: `:link: <${q.meeting_notes_url}>\\n:link: <https://innersourcecommons.org/calendar/|InnerSource Commons Calendar>` } },\n    { type: 'actions', elements: [ { type: 'button', text: { type: 'plain_text', text: 'Join Meeting', emoji: true }, url: 'https://us06web.zoom.us/j/84987611486?pwd=Biw6cc9UwWI6FrM51Ugox10sClIP6n.1', style: 'danger' } ] }\n  ]\n};\nreturn [{ json: { ...item, blocks } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        784,
+        848,
         0
       ],
-      "id": "6e5f57cb-7da9-437f-8276-597f391076ce",
+      "id": "67fc5524-7a3c-43f1-ab9f-c7f2f9b10ad6",
       "name": "Build Slack blocks"
     },
     {
@@ -97,7 +96,7 @@
         0,
         192
       ],
-      "id": "e18a841a-2755-4ede-a6dd-f6553d7ed4ab",
+      "id": "be7ca451-ae98-4a26-83ff-5386e4cc7d49",
       "name": "Webhook",
       "webhookId": "0ce14788-827f-4d45-bb3d-b19bac30bfb7"
     },
@@ -150,7 +149,7 @@
         224,
         96
       ],
-      "id": "e8bdddfb-cbdf-4ab3-bf10-47285701b0e9",
+      "id": "6eaf3fba-b7fb-43f1-8a6e-5de4517b2839",
       "name": "Validate date and time"
     },
     {
@@ -163,7 +162,7 @@
         448,
         192
       ],
-      "id": "cbbb753a-0176-483e-b08b-ed9fc80d9563",
+      "id": "5fa78456-ba15-463c-8313-5d39e85720c4",
       "name": "Stop on error"
     }
   ],
@@ -172,11 +171,11 @@
       {
         "json": {
           "query": {
-            "date": "2026-03-02",
-            "time": "15:00",
-            "topic": "The role that InnerSource plays in agentic/augmented software development.",
-            "channel": "ispo-working-group",
-            "meeting_notes_url": "https://docs.google.com/document/d/1dMjr2I2TEZk6XFnErybQdFMhHqZvKm0rLO85U_HNR_k/edit?usp=sharing"
+            "date": "2026-08-03",
+            "time": "16:00",
+            "topic": "Making progress on our ISPO Working Group rebranding to The InnerSource Working Group.",
+            "channel": "innersource-working-group",
+            "meeting_notes_url": "https://docs.google.com/document/d/1l5Rzyrsf2DS1wNzIYiZBpDXH7SbxIwK5/edit?usp=sharing&ouid=115858476171299464445&rtpof=true&sd=true"
           }
         }
       }
@@ -249,12 +248,15 @@
   "active": false,
   "settings": {
     "executionOrder": "v1",
+    "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "90c7e439-ba6f-4891-8df2-3f099200c0f3",
+  "versionId": "34a71b75-2e9e-4ce7-9ee3-1c1337339665",
   "meta": {
-    "instanceId": "505d3f2effe3cea9c5bcf74fb293004bb613f932b3d6dd9cc01c7c68e9422333"
+    "templateCredsSetupCompleted": true,
+    "instanceId": "42566e2b3b77f028e93e74b7c60d9194d35d5cfbf8340b4442416b191d1e3a55"
   },
-  "id": "GCBCx_EFr4xCluqYRVX8K",
+  "nodeGroups": [],
+  "id": "UGMbZEEeR3mLMmI6",
   "tags": []
 }

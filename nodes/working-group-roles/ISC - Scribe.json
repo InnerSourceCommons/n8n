@@ -58,11 +58,6 @@
             },
             {
               "action": "replaceAll",
-              "text": "[Sheduler]",
-              "replaceText": "={{ $('Template Fields').item.json.roles?.scribe || '[Sheduler]' }}"
-            },
-            {
-              "action": "replaceAll",
               "text": "[Crier]",
               "replaceText": "={{ $('Template Fields').item.json.roles?.crier || '[Crier]' }}"
             },

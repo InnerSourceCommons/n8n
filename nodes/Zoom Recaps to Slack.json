@@ -1,0 +1,997 @@
+{
+  "name": "Zoom Recaps to Slack",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "c8078642-e424-4e49-9165-328bb612f92d",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "fe0c0dda-389f-4df5-8571-54e5e7010157",
+      "name": "Webhook",
+      "webhookId": "c8078642-e424-4e49-9165-328bb612f92d",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        -304
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "id": "a1000000-0000-0000-0000-000000000001",
+      "name": "Daily Sweep",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://zoom.us/oauth/token",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "grant_type",
+              "value": "account_credentials"
+            },
+            {
+              "name": "account_id",
+              "value": "Pcq9mBW1RL2KEx182kByWw"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1000000-0000-0000-0000-000000000002",
+      "name": "Get Zoom Token",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        224,
+        0
+      ],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "hfoStGPpohxQatuT",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.zoom.us/v2/meetings/meeting_summaries",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "from",
+              "value": "={{ $now.minus({ days: 3 }).toFormat('yyyy-MM-dd') }}"
+            },
+            {
+              "name": "to",
+              "value": "={{ $now.toFormat('yyyy-MM-dd') }}"
+            },
+            {
+              "name": "page_size",
+              "value": "300"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.access_token }}"
+            }
+          ]
+        },
+        "options": {
+          "pagination": {
+            "pagination": {
+              "parameters": {
+                "parameters": [
+                  {
+                    "name": "next_page_token",
+                    "value": "={{ $response.body.next_page_token }}"
+                  }
+                ]
+              },
+              "paginationCompleteWhen": "other",
+              "completeExpression": "={{ !$response.body.next_page_token }}",
+              "limitPagesFetched": true
+            }
+          }
+        }
+      },
+      "id": "a1000000-0000-0000-0000-000000000003",
+      "name": "List Summaries",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        448,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Pick the one meeting to post this run: the newest UNPOSTED occurrence, taking only the LATEST\n// occurrence of each configured meeting. Calendar guardrail: a meeting headed for a PUBLIC channel\n// must match a scheduled public-calendar event (same Zoom meeting id + weekday/time) - this stops a\n// different meeting that borrowed the same Zoom room (e.g. a board meeting) from posting to a public\n// channel. Meetings headed for PRIVATE channels post without that check. Emits 0 or 1 item.\nconst token = $('Get Zoom Token').first().json.access_token;\n\nconst config = {};\nconst chatham = {};\nfor (const r of $('All Config').all()) { const j = r.json || {}; if (j.meetingId) { config[String(j.meetingId)] = j.channel; chatham[String(j.meetingId)] = j.chathamHouse === true; } }\nconst posted = new Set($('All Posted').all().map(r => (r.json || {}).occurrenceUuid).filter(Boolean));\n\n// Channel privacy from the conversations.list side fetch; default to private (safe) if unknown.\nconst chans = $('Slack: conversations.list').all().flatMap(i => (i.json.channels) || []);\nconst isPrivateChannel = (name) => { const c = chans.find(x => '#' + x.name === name); return c ? !!c.is_private : true; };\n\n// Public-calendar iCal text (fetched upstream, no auth).\nconst j = $('Public Calendar').first().json;\nconst ical = (j && (j.data || (typeof j === 'string' ? j : j.body))) || '';\nfunction matchesPublicEvent(icalText, meetingId, occurrenceIso) {\n  const text = (icalText || '').replace(/\\r?\\n[ \\t]/g, ''); // unfold continuation lines\n  const events = text.split('BEGIN:VEVENT').slice(1);\n  const occ = new Date(occurrenceIso);\n  const occDate = occurrenceIso.slice(0, 10).replace(/-/g, '');\n  const occWeekday = occ.getUTCDay();\n  const occMin = occ.getUTCHours() * 60 + occ.getUTCMinutes();\n  for (const e of events) {\n    if (!e.includes(String(meetingId))) continue;\n    const dt = (e.match(/DTSTART[^:]*:([0-9T]+Z?)/) || [])[1];\n    if (!dt) continue;\n    if (dt.slice(0, 8) === occDate) return true; // concrete instance on the same date\n    if (/Z$/.test(dt)) {                          // recurring UTC slot: match weekday + time-of-day\n      const h = +dt.slice(9, 11), mi = +dt.slice(11, 13);\n      const evd = new Date(Date.UTC(+dt.slice(0, 4), +dt.slice(4, 6) - 1, +dt.slice(6, 8), h, mi));\n      if (evd.getUTCDay() === occWeekday && Math.abs((h * 60 + mi) - occMin) <= 90) return true;\n    }\n  }\n  return false;\n}\n\n// Flatten every summary across the paginated List Summaries responses.\nconst all = [];\nfor (const it of $('List Summaries').all()) for (const s of (((it.json || {}).summaries) || [])) all.push(s);\n\n// Latest occurrence per configured meeting.\nconst latestByMeeting = {};\nfor (const s of all) {\n  const k = String(s.meeting_id);\n  if (!config[k]) continue;\n  const cur = latestByMeeting[k];\n  if (!cur || new Date(s.meeting_start_time) > new Date(cur.meeting_start_time)) latestByMeeting[k] = s;\n}\n// Newest-first among unposted; pick the newest that clears the guardrail.\nconst eligible = Object.values(latestByMeeting)\n  .filter(s => !posted.has(s.meeting_uuid))\n  .sort((a, b) => new Date(b.meeting_start_time) - new Date(a.meeting_start_time));\nlet chosen = null;\nfor (const s of eligible) {\n  const channel = config[String(s.meeting_id)];\n  if (isPrivateChannel(channel)) { chosen = s; break; }\n  if (matchesPublicEvent(ical, s.meeting_id, s.meeting_start_time)) { chosen = s; break; }\n  // public channel + no matching public event -> a room-reuse; skip this meeting, try the next.\n}\nif (!chosen) return [];\n\nreturn [{ json: {\n  meetingUuid: chosen.meeting_uuid,\n  meetingId: String(chosen.meeting_id),\n  topic: chosen.meeting_topic,\n  meetingStart: chosen.meeting_start_time,\n  channel: config[String(chosen.meeting_id)],\n  chathamHouse: !!chatham[String(chosen.meeting_id)],\n  occurrenceUuid: chosen.meeting_uuid,\n  token,\n}}];\n"
+      },
+      "id": "a1000000-0000-0000-0000-000000000004",
+      "name": "Build Candidates",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1328,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.zoom.us/v2/meetings/{{ encodeURIComponent(encodeURIComponent($json.meetingUuid)) }}/meeting_summary",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.token }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1000000-0000-0000-0000-000000000005",
+      "name": "Get Summary",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1328,
+        0
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Content + cooldown gate. Drop un-generated shells and summaries still being refined.\nconst s = $json || {};\nconst cand = $('Attach Fields').item.json;\nconst COOLDOWN_MIN = 15;\nconst hasContent = !!(s.summary_overview || (Array.isArray(s.next_steps) && s.next_steps.length));\nif (!hasContent) return [];\nconst modIso = s.summary_last_modified_time || s.summary_created_time;\nif (modIso) {\n  const ageMin = (Date.now() - new Date(modIso).getTime()) / 60000;\n  if (ageMin < COOLDOWN_MIN) return [];\n}\nreturn [{ json: {\n  meetingUuid: cand.meetingUuid,\n  meetingId: cand.meetingId,\n  channel: cand.channel,\n  chathamHouse: !!cand.chathamHouse,\n  topic: s.meeting_topic || cand.topic,\n  meetingStart: s.meeting_start_time || cand.meetingStart,\n  recap: s.summary_overview || '',\n  nextSteps: Array.isArray(s.next_steps) ? s.next_steps : [],\n  summaryDetails: Array.isArray(s.summary_details) ? s.summary_details : [],\n  docUrl: s.summary_doc_url || '',\n}}];"
+      },
+      "id": "a1000000-0000-0000-0000-000000000006",
+      "name": "Gate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1552,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Config Lookup produced the channel row (or nothing => not in allowlist, drop).\nconst channel = $json.channel;\nif (!channel) return [];\nconst cand = $('Build Candidates').item.json;\nreturn [{ json: { ...cand, channel } }];"
+      },
+      "id": "a1000000-0000-0000-0000-000000000008",
+      "name": "Attach Fields",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1104,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "rowNotExists",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "RG303gxSIBHMskIz"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "occurrenceUuid",
+              "keyValue": "={{ $json.meetingUuid }}"
+            }
+          ]
+        }
+      },
+      "id": "a1000000-0000-0000-0000-000000000009",
+      "name": "Skip If Already Posted",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        2208,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://slack.com/api/users.list",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "limit",
+              "value": "1000"
+            }
+          ]
+        },
+        "options": {
+          "pagination": {
+            "pagination": {
+              "parameters": {
+                "parameters": [
+                  {
+                    "name": "cursor",
+                    "value": "={{ $response.body.response_metadata.next_cursor }}"
+                  }
+                ]
+              },
+              "paginationCompleteWhen": "other",
+              "completeExpression": "={{ !$response.body.response_metadata || !$response.body.response_metadata.next_cursor }}",
+              "limitPagesFetched": true
+            }
+          }
+        }
+      },
+      "id": "a1000000-0000-0000-0000-000000000010",
+      "name": "Slack: users.list",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        224,
+        272
+      ],
+      "credentials": {
+        "slackApi": {
+          "id": "bQmwtArWlEan0get",
+          "name": "Slack account Bot Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Resolve names to Slack @-mentions and build the Block Kit recap.\n// Mentions are gated to ACTUAL MEMBERS of the target channel: a name is tagged only when\n// it resolves to a Slack user who belongs to the channel this recap posts to. That tags every\n// attendee who's in the channel (in prose and in action items) and leaves genuinely external\n// people plain, and it disambiguates common names for free (e.g. among 9 \"Jeff\"s in the\n// workspace, only the one in the channel gets the ping).\nconst rec = $('Skip If Already Posted').item.json;\nconst memberIds = new Set($('Slack: conversations.members').all().flatMap(i => (i.json.members) || []));\nconst members = $('Slack: users.list').all()\n  .flatMap(i => (i.json.members) || [])\n  .filter(m => memberIds.has(m.id) && !m.deleted && !m.is_bot && m.id !== 'USLACKBOT');\nconst norm = x => (x || '').toString().trim().toLowerCase();\n// Nickname families: a spelling on the left, when it appears in the text, resolves to a member\n// whose first name is the canonical form on the right (lets \"Russell\" reach the member \"Russ\").\nconst ALIAS = { russell: 'russ' };\nconst canon = f => ALIAS[norm(f)] || norm(f);\nconst aliasVariants = {}; // canonical -> extra text spellings that should also match\nfor (const [variant, c] of Object.entries(ALIAS)) (aliasVariants[c] = aliasVariants[c] || []).push(variant);\n// Common words that show up in recap prose but are also, occasionally, someone's junk Slack name\n// (e.g. a user whose real name is literally \"name\"). Never treat these as a first name to tag.\nconst COMMON_WORDS = new Set(['name', 'names', 'team', 'teams', 'board', 'group', 'groups', 'call', 'calls', 'meeting', 'meetings', 'note', 'notes', 'update', 'updates', 'staff', 'work', 'works', 'next', 'step', 'steps', 'item', 'items', 'all', 'new', 'lead', 'leads', 'chair', 'member', 'members', 'working', 'community', 'summit', 'project', 'projects', 'plan', 'plans', 'goal', 'goals', 'review', 'agenda', 'action', 'actions', 'report', 'reports', 'week', 'weeks', 'day', 'days', 'time', 'times', 'page', 'pages', 'doc', 'docs', 'content', 'video', 'videos', 'deck', 'issue', 'issues', 'code', 'user', 'users', 'test', 'admin', 'guest', 'welcome', 'thanks', 'hello']);\nconst byName = {};   // full \"first last\" -> id  (channel members only)\nconst byFirstC = {}; // canonical first name -> Set<id>  (channel members only)\nfor (const m of members) {\n  const p = m.profile || {};\n  for (const n of [p.real_name, p.display_name, m.real_name, m.name, p.real_name_normalized, p.display_name_normalized]) {\n    const k = norm(n);\n    if (k && k.includes(' ') && !(k in byName)) byName[k] = m.id;\n  }\n  for (const n of [p.real_name, m.real_name, p.display_name, m.name]) {\n    const c = canon((n || '').split(/[.\\s_]+/)[0]);\n    if (c && c.length >= 3 && !COMMON_WORDS.has(c)) (byFirstC[c] = byFirstC[c] || new Set()).add(m.id);\n  }\n}\nconst esc = s => s.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');\n// Levenshtein distance, used for a tight fuzzy match against the channel roster.\nfunction lev(a, b) {\n  const m = a.length, n = b.length;\n  if (!m) return n; if (!n) return m;\n  const d = Array.from({ length: m + 1 }, (_, i) => [i, ...Array(n).fill(0)]);\n  for (let j = 0; j <= n; j++) d[0][j] = j;\n  for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++)\n    d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));\n  return d[m][n];\n}\n// Fuzzy first-name match within the (small) channel-member pool: catches transcription\n// misspellings like \"Claire\" -> Clare Dillon. Conservative on purpose - only fires for a name\n// >=5 chars that is within edit distance 1 of exactly one channel member, so it can't grab a\n// common word or pick the wrong person.\nfunction fuzzyFirstId(tok) {\n  const t = canon(tok);\n  if (t.length < 5) return null;\n  let hit = null;\n  for (const [c, set] of Object.entries(byFirstC)) {\n    if (c.length < 5 || set.size !== 1) continue;\n    if (lev(t, c) <= 1) { const id = [...set][0]; if (hit && hit !== id) return null; hit = id; }\n  }\n  return hit;\n}\n// Resolve an action-item owner token (may be dotted/underscored, e.g. \"Micaela.Eller\").\nfunction resolveId(name) {\n  const raw = (name || '').trim();\n  for (const v of [raw, raw.replace(/[._]+/g, ' ')]) { const id = byName[norm(v)]; if (id) return id; }\n  const set = byFirstC[canon(raw.split(/[.\\s_]+/)[0])];\n  if (set && set.size === 1) return [...set][0];\n  return fuzzyFirstId(raw.split(/[.\\s_]+/)[0]);\n}\n// Tag any channel member named anywhere in free text (full names, then unique first names,\n// then a tight fuzzy pass over remaining capitalized words for misspelled names).\nfunction resolveProse(text) {\n  let out = text || '';\n  for (const name of Object.keys(byName).sort((a, b) => b.length - a.length)) {\n    out = out.replace(new RegExp('\\\\b' + esc(name) + '\\\\b', 'gi'), '<@' + byName[name] + '>');\n  }\n  for (const [c, set] of Object.entries(byFirstC)) {\n    if (set.size !== 1) continue;\n    const id = [...set][0];\n    for (const t of [c, ...(aliasVariants[c] || [])]) out = out.replace(new RegExp('\\\\b' + esc(t) + '\\\\b', 'gi'), '<@' + id + '>');\n  }\n  out = out.replace(/\\b[A-Z][a-z]{4,}\\b/g, (w) => { const id = fuzzyFirstId(w); return id ? '<@' + id + '>' : w; });\n  return out;\n}\n// Chatham House series: never tag or name a participant. Any channel member's name that survived the\n// anonymizing filter is replaced with a neutral stand-in (a backstop - the filter already strips names).\nfunction scrub(text) {\n  let out = text || '';\n  const anon = (m, poss, at, str) => (/(^|[.!?:*\\n]\\s*)$/.test(str.slice(0, at)) ? 'A' : 'a') + ' participant' + (poss || '');\n  for (const name of Object.keys(byName).sort((a, b) => b.length - a.length)) {\n    out = out.replace(new RegExp('\\\\b' + esc(name) + '(\\'s)?\\\\b', 'gi'), anon);\n  }\n  for (const c of Object.keys(byFirstC)) {\n    for (const t of [c, ...(aliasVariants[c] || [])]) {\n      out = out.replace(new RegExp('\\\\b' + esc(t[0].toUpperCase() + t.slice(1)) + '(\\'s)?\\\\b', 'g'), anon);\n    }\n  }\n  return out;\n}\nconst CH = !!rec.chathamHouse;\n// A leading 'Name:' / 'First Last:' owner prefix, dropped on a Chatham House series.\nconst OWNER_PREFIX = /^[A-Z][\\w.'-]*(?: [A-Z][\\w.'-]*){0,2}$/;\n// Action items: resolve the owner token, then tag any members named in the rest of the line.\n// Chatham House series: group next steps by owner under anonymous labels (Person 1, Person 2, ...)\n// numbered by first appearance, so attendees can still tell which tasks belong together.\nlet chStepsText = '';\nif (CH) {\n  const people = new Map();\n  const loose = [];\n  for (const line of (rec.nextSteps || [])) {\n    const s = String(line);\n    const j = s.indexOf(':');\n    const nm = j > -1 ? s.slice(0, j).trim() : '';\n    if (nm && OWNER_PREFIX.test(nm)) {\n      const key = resolveId(nm) || canon(nm.split(/[.\\s_]+/)[0]);\n      if (!people.has(key)) people.set(key, []);\n      people.get(key).push(scrub(s.slice(j + 1).trim()));\n    } else {\n      loose.push(scrub(s.trim()));\n    }\n  }\n  const parts = [];\n  let n = 0;\n  for (const tasks of people.values()) parts.push('*Person ' + (++n) + '*\\n' + tasks.map(t => '• ' + t).join('\\n'));\n  if (loose.length) parts.push((n ? '*Unassigned*\\n' : '') + loose.map(t => '• ' + t).join('\\n'));\n  if (parts.length) chStepsText = '*Next steps*\\n' + parts.join('\\n\\n');\n}\nconst steps = CH ? [] : (rec.nextSteps || []).map(line => {\n  const s = String(line);\n  const i = s.indexOf(':');\n  if (i === -1) return '• ' + resolveProse(s.trim());\n  const nm = s.slice(0, i);\n  const id = resolveId(nm);\n  const owner = id ? '<@' + id + '>' : '*' + nm.trim() + '*';\n  return '• ' + owner + ': ' + resolveProse(s.slice(i + 1).trim());\n});\nfunction sectionBlocks(text) {\n  const out = []; let cur = '';\n  for (const line of (text || '').split('\\n')) {\n    if ((cur + '\\n' + line).length > 2900) { if (cur) out.push({ type: 'section', text: { type: 'mrkdwn', text: cur } }); cur = line; }\n    else { cur = cur ? cur + '\\n' + line : line; }\n  }\n  if (cur) out.push({ type: 'section', text: { type: 'mrkdwn', text: cur } });\n  return out;\n}\nconst topic = rec.topic || 'Zoom meeting';\n// The meeting's start time, formatted in UTC (neutral for the global InnerSource community).\nfunction fmtUTC(iso) {\n  const d = new Date(iso);\n  if (isNaN(d.getTime())) return '';\n  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];\n  let h = d.getUTCHours();\n  const ampm = h >= 12 ? 'PM' : 'AM';\n  h = h % 12 || 12;\n  return months[d.getUTCMonth()] + ' ' + d.getUTCDate() + ', ' + d.getUTCFullYear() + ', ' + h + ':' + String(d.getUTCMinutes()).padStart(2, '0') + ' ' + ampm + ' UTC';\n}\nconst when = fmtUTC(rec.meetingStart);\nconst title = 'Meeting recap - ' + topic + (when ? ' (' + when + ')' : '');\nconst recap = CH ? scrub(rec.recap || '') : resolveProse(rec.recap || '');\nconst blocks = [{ type: 'section', text: { type: 'mrkdwn', text: '*:memo: ' + title + '*' } }];\nif (recap) blocks.push(...sectionBlocks(recap));\nif (steps.length) { blocks.push({ type: 'divider' }); blocks.push(...sectionBlocks('*Next steps*\\n' + steps.join('\\n'))); }\nif (chStepsText) { blocks.push({ type: 'divider' }); blocks.push(...sectionBlocks(chStepsText)); }\nif (CH) blocks.push({ type: 'context', elements: [{ type: 'mrkdwn', text: ':lock: Held under the Chatham House Rule - names and affiliations are left out of these notes, and action-item owners are shown as Person 1, Person 2, and so on.' }] });\nreturn [{ json: { channel: rec.channel, meetingUuid: rec.meetingUuid, blocks: blocks.slice(0, 48), fallbackText: title } }];\n"
+      },
+      "id": "a1000000-0000-0000-0000-000000000011",
+      "name": "Format Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2640,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ channel: $json.channel, text: $json.fallbackText, blocks: $json.blocks }) }}",
+        "options": {}
+      },
+      "id": "a1000000-0000-0000-0000-000000000012",
+      "name": "Slack: chat.postMessage",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2864,
+        0
+      ],
+      "credentials": {
+        "slackApi": {
+          "id": "bQmwtArWlEan0get",
+          "name": "Slack account Bot Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a1000000-0000-0000-0000-000000000013",
+      "name": "Post OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3088,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "RG303gxSIBHMskIz"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "occurrenceUuid": "={{ $('Format Message').item.json.meetingUuid }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "a1000000-0000-0000-0000-000000000014",
+      "name": "Record Posted",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        3312,
+        -128
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: \"claude-opus-5\", max_tokens: 2000, output_config: { effort: \"low\" }, messages: [ { role: \"user\", content: \"You are preparing a meeting recap to post in the InnerSource Commons team Slack. InnerSource Commons (ISC) is a nonprofit foundation. Keep ONLY content about InnerSource Commons organizational business - for example: the InnerSource Summit, sponsors and sponsorships, the board, staff and hiring, membership, community calls and events, marketing and the newsletter, programs, partnerships, and ISC finances or operations. Remove everything that is not ISC business, even if it sounds professional - for example an attendee's own side business, venture, or consulting; their personal job search, interviews, offers, or career moves; other employers or former jobs; personal legal, financial, or family matters; and any health, social, or off-topic chit-chat. Do not summarize or reference the removed topics at all. Do not add, infer, or invent anything - keep only what is actually present and clearly ISC-related. When you are unsure whether something is ISC business, leave it out. Preserve each next step's 'Name: task' prefix. If nothing in the summary is ISC-related, return an empty recap and an empty nextSteps array. Return ONLY a JSON object of the form {\\\"recap\\\": string, \\\"nextSteps\\\": string[]}. \" + ($json.chathamHouse ? \"This meeting is held under the Chatham House Rule, so ANONYMIZE it completely: share what was discussed and decided, but never reveal who said or did anything, or who attended. Remove every person's name (full names, first names, nicknames, possessives) and every participant's employer, company, or organizational affiliation (for example a company name tied to what a participant said, demoed, or works on). Refer to people only as 'a participant', 'one attendee', 'several participants', or 'the group'. Also leave out any detail specific enough to identify a speaker indirectly - a job title, their employer's named product or internal system, or their personal circumstances. For nextSteps, keep each step's leading 'Name:' owner prefix exactly as given (it is replaced with an anonymous label before posting), but remove every name and affiliation from the task text after the prefix. \" : \"\") + \"Here is the summary to filter:\\n\" + JSON.stringify({ recap: $json.recap, nextSteps: $json.nextSteps }) } ] }) }}",
+        "options": {}
+      },
+      "id": "a1000000-0000-0000-0000-0000000000f1",
+      "name": "Professional Filter",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1760,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "9iLJ44YYazPIODV8",
+          "name": "Header Auth account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Replace recap + nextSteps with the InnerSource-Commons-only cleaned versions from the filter.\n// Privacy-safe: if the filter didn't return a usable result, SKIP posting rather than falling back\n// to the raw (unfiltered) summary. And if nothing ISC-related survived, there is nothing to post.\nconst resp = $json || {};\nconst rec = $('Gate').item.json;\nlet recap = null, nextSteps = null;\ntry {\n  const text = (resp.content || []).filter(b => b.type === 'text').map(b => b.text).join('');\n  const m = text.match(/\\{[\\s\\S]*\\}/);\n  if (m) {\n    const parsed = JSON.parse(m[0]);\n    if (typeof parsed.recap === 'string') recap = parsed.recap;\n    if (Array.isArray(parsed.nextSteps)) nextSteps = parsed.nextSteps;\n  }\n} catch (e) {}\nif (recap === null || nextSteps === null) return [];\nrecap = recap.trim();\nif (!recap && nextSteps.length === 0) return [];\nreturn [{ json: { ...rec, recap, nextSteps } }];\n"
+      },
+      "id": "a1000000-0000-0000-0000-0000000000f2",
+      "name": "Apply Filter",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1984,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build the raw full-notes text from Zoom's detailed sections, plus the main post's thread ts.\nconst rec = $('Apply Filter').item.json;\nconst details = rec.summaryDetails || [];\nconst channel = $('Format Message').item.json.channel;\nconst post = $('Slack: chat.postMessage').item.json;\nconst ts = post && post.ts;\nif (!details.length || !ts) return [];\nconst notesText = details\n  .map(d => '*' + (d.label || '').toString().trim() + '*\\n' + (d.summary || '').toString().trim())\n  .join('\\n\\n');\nreturn [{ json: { channel, threadTs: ts, notesText, chathamHouse: !!rec.chathamHouse } }];\n"
+      },
+      "id": "a1000000-0000-0000-0000-0000000000n1",
+      "name": "Format Full Notes",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3312,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: \"claude-opus-5\", max_tokens: 4000, output_config: { effort: \"low\" }, messages: [ { role: \"user\", content: \"You are preparing the detailed section-by-section notes of a meeting to post as a reply in the InnerSource Commons team Slack thread. InnerSource Commons (ISC) is a nonprofit foundation. Keep ONLY sections and content about InnerSource Commons organizational business (the Summit, sponsors, board, staff and hiring, membership, community calls and events, marketing and newsletter, programs, partnerships, ISC finances or operations). Remove entirely any section or passage that is not ISC business, even if professional - an attendee's own side business or venture, their personal job search or career, other employers or former jobs, personal legal, financial, or family matters, and health, social, or off-topic chit-chat. Drop those sections completely; do not mention or allude to them. Do not add or invent anything. Preserve the *Section Title* headers for the sections you keep, and their structure. When unsure whether something is ISC business, leave it out. If nothing is ISC-related, return an empty string. \" + ($json.chathamHouse ? \"This meeting is held under the Chatham House Rule, so ANONYMIZE it completely: share what was discussed and decided, but never reveal who said or did anything, or who attended. Remove every person's name (full names, first names, nicknames, possessives) and every participant's employer, company, or organizational affiliation (for example a company name tied to what a participant said, demoed, or works on). Refer to people only as 'a participant', 'one attendee', 'several participants', or 'the group'. Also leave out any detail specific enough to identify a speaker indirectly - a job title, their employer's named product or internal system, or their personal circumstances. \" : \"\") + \"Return ONLY the cleaned notes as Slack mrkdwn text. Notes:\\n\" + $json.notesText } ] }) }}",
+        "options": {}
+      },
+      "id": "a1000000-0000-0000-0000-0000000000n2",
+      "name": "Filter Full Notes",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        3536,
+        160
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "9iLJ44YYazPIODV8",
+          "name": "Header Auth account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Take Claude's cleaned full-notes text, resolve member names to @-mentions, chunk into Block Kit.\n// Mentions are gated to actual members of the target channel (same rule as the main recap):\n// only a name resolving to a channel member is tagged; external names stay plain.\nconst resp = $json || {};\nconst src = $('Format Full Notes').item.json;\n// Privacy-safe: use only the filter's InnerSource-Commons-only output. If it returned nothing usable\n// (filter failed, or nothing ISC-related remained), skip the thread rather than posting raw notes.\nlet notes = null;\ntry {\n  const t = (resp.content || []).filter(b => b.type === 'text').map(b => b.text).join('');\n  notes = t.trim();\n} catch (e) { notes = null; }\nif (!notes) return [];\nconst memberIds = new Set($('Slack: conversations.members').all().flatMap(i => (i.json.members) || []));\nconst members = $('Slack: users.list').all()\n  .flatMap(i => (i.json.members) || [])\n  .filter(m => memberIds.has(m.id) && !m.deleted && !m.is_bot && m.id !== 'USLACKBOT');\nconst norm = x => (x || '').toString().trim().toLowerCase();\nconst ALIAS = { russell: 'russ' };\nconst canon = f => ALIAS[norm(f)] || norm(f);\nconst aliasVariants = {};\nfor (const [variant, c] of Object.entries(ALIAS)) (aliasVariants[c] = aliasVariants[c] || []).push(variant);\n// Common words that show up in notes prose but are also, occasionally, someone's junk Slack name.\nconst COMMON_WORDS = new Set(['name', 'names', 'team', 'teams', 'board', 'group', 'groups', 'call', 'calls', 'meeting', 'meetings', 'note', 'notes', 'update', 'updates', 'staff', 'work', 'works', 'next', 'step', 'steps', 'item', 'items', 'all', 'new', 'lead', 'leads', 'chair', 'member', 'members', 'working', 'community', 'summit', 'project', 'projects', 'plan', 'plans', 'goal', 'goals', 'review', 'agenda', 'action', 'actions', 'report', 'reports', 'week', 'weeks', 'day', 'days', 'time', 'times', 'page', 'pages', 'doc', 'docs', 'content', 'video', 'videos', 'deck', 'issue', 'issues', 'code', 'user', 'users', 'test', 'admin', 'guest', 'welcome', 'thanks', 'hello']);\nconst byName = {}, byFirstC = {};\nfor (const m of members) {\n  const p = m.profile || {};\n  for (const n of [p.real_name, p.display_name, m.real_name, m.name, p.real_name_normalized, p.display_name_normalized]) {\n    const k = norm(n);\n    if (k && k.includes(' ') && !(k in byName)) byName[k] = m.id;\n  }\n  for (const n of [p.real_name, m.real_name, p.display_name, m.name]) {\n    const c = canon((n || '').split(/[.\\s_]+/)[0]);\n    if (c && c.length >= 3 && !COMMON_WORDS.has(c)) (byFirstC[c] = byFirstC[c] || new Set()).add(m.id);\n  }\n}\nconst esc = s => s.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');\nfunction lev(a, b) {\n  const m = a.length, n = b.length;\n  if (!m) return n; if (!n) return m;\n  const d = Array.from({ length: m + 1 }, (_, i) => [i, ...Array(n).fill(0)]);\n  for (let j = 0; j <= n; j++) d[0][j] = j;\n  for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++)\n    d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));\n  return d[m][n];\n}\nfunction fuzzyFirstId(tok) {\n  const t = canon(tok);\n  if (t.length < 5) return null;\n  let hit = null;\n  for (const [c, set] of Object.entries(byFirstC)) {\n    if (c.length < 5 || set.size !== 1) continue;\n    if (lev(t, c) <= 1) { const id = [...set][0]; if (hit && hit !== id) return null; hit = id; }\n  }\n  return hit;\n}\nfunction resolveProse(text) {\n  let out = text || '';\n  for (const name of Object.keys(byName).sort((a, b) => b.length - a.length)) {\n    out = out.replace(new RegExp('\\\\b' + esc(name) + '\\\\b', 'gi'), '<@' + byName[name] + '>');\n  }\n  for (const [c, set] of Object.entries(byFirstC)) {\n    if (set.size !== 1) continue;\n    const id = [...set][0];\n    for (const t of [c, ...(aliasVariants[c] || [])]) out = out.replace(new RegExp('\\\\b' + esc(t) + '\\\\b', 'gi'), '<@' + id + '>');\n  }\n  out = out.replace(/\\b[A-Z][a-z]{4,}\\b/g, (w) => { const id = fuzzyFirstId(w); return id ? '<@' + id + '>' : w; });\n  return out;\n}\n// Chatham House series: never tag or name a participant. Any channel member's name that survived the\n// anonymizing filter is replaced with a neutral stand-in (a backstop - the filter already strips names).\nfunction scrub(text) {\n  let out = text || '';\n  const anon = (m, poss, at, str) => (/(^|[.!?:*\\n]\\s*)$/.test(str.slice(0, at)) ? 'A' : 'a') + ' participant' + (poss || '');\n  for (const name of Object.keys(byName).sort((a, b) => b.length - a.length)) {\n    out = out.replace(new RegExp('\\\\b' + esc(name) + '(\\'s)?\\\\b', 'gi'), anon);\n  }\n  for (const c of Object.keys(byFirstC)) {\n    for (const t of [c, ...(aliasVariants[c] || [])]) {\n      out = out.replace(new RegExp('\\\\b' + esc(t[0].toUpperCase() + t.slice(1)) + '(\\'s)?\\\\b', 'g'), anon);\n    }\n  }\n  return out;\n}\nfunction sectionBlocks(text) {\n  const out = []; let cur = '';\n  for (const line of (text || '').split('\\n')) {\n    if ((cur + '\\n' + line).length > 2900) { if (cur) out.push({ type: 'section', text: { type: 'mrkdwn', text: cur } }); cur = line; }\n    else { cur = cur ? cur + '\\n' + line : line; }\n  }\n  if (cur) out.push({ type: 'section', text: { type: 'mrkdwn', text: cur } });\n  return out;\n}\nnotes = src.chathamHouse ? scrub(notes) : resolveProse(notes);\nconst blocks = [{ type: 'section', text: { type: 'mrkdwn', text: '*Full notes*' } }].concat(sectionBlocks(notes)).slice(0, 48);\nreturn [{ json: { channel: src.channel, threadTs: src.threadTs, blocks } }];\n"
+      },
+      "id": "a1000000-0000-0000-0000-0000000000n3",
+      "name": "Apply Full Notes",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3760,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ channel: $json.channel, thread_ts: $json.threadTs, text: \"Full notes\", blocks: $json.blocks }) }}",
+        "options": {}
+      },
+      "id": "a1000000-0000-0000-0000-0000000000n4",
+      "name": "Post Thread Reply",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        3984,
+        160
+      ],
+      "credentials": {
+        "slackApi": {
+          "id": "bQmwtArWlEan0get",
+          "name": "Slack account Bot Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://slack.com/api/conversations.list",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "types",
+              "value": "public_channel,private_channel"
+            },
+            {
+              "name": "exclude_archived",
+              "value": "true"
+            },
+            {
+              "name": "limit",
+              "value": "1000"
+            }
+          ]
+        },
+        "options": {
+          "pagination": {
+            "pagination": {
+              "parameters": {
+                "parameters": [
+                  {
+                    "name": "cursor",
+                    "value": "={{ $response.body.response_metadata.next_cursor }}"
+                  }
+                ]
+              },
+              "paginationCompleteWhen": "other",
+              "completeExpression": "={{ !$response.body.response_metadata || !$response.body.response_metadata.next_cursor }}",
+              "limitPagesFetched": true
+            }
+          }
+        }
+      },
+      "id": "1335d616-23f1-4cc0-ae88-f3191cc73c15",
+      "name": "Slack: conversations.list",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        224,
+        432
+      ],
+      "credentials": {
+        "slackApi": {
+          "id": "bQmwtArWlEan0get",
+          "name": "Slack account Bot Token"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "https://slack.com/api/conversations.members",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "channel",
+              "value": "={{ ($('Slack: conversations.list').all().flatMap(i => i.json.channels || []).find(c => '#' + c.name === $json.channel) || {}).id }}"
+            },
+            {
+              "name": "limit",
+              "value": "1000"
+            }
+          ]
+        },
+        "options": {
+          "pagination": {
+            "pagination": {
+              "parameters": {
+                "parameters": [
+                  {
+                    "name": "cursor",
+                    "value": "={{ $response.body.response_metadata.next_cursor }}"
+                  }
+                ]
+              },
+              "paginationCompleteWhen": "other",
+              "completeExpression": "={{ !$response.body.response_metadata || !$response.body.response_metadata.next_cursor }}",
+              "limitPagesFetched": true
+            }
+          }
+        }
+      },
+      "id": "dbf2fe26-e86e-4f04-a894-a7f14ff1eb35",
+      "name": "Slack: conversations.members",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        720,
+        624
+      ],
+      "credentials": {
+        "slackApi": {
+          "id": "bQmwtArWlEan0get",
+          "name": "Slack account Bot Token"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "zhSysUVAmqepqX5I"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "condition": "gte",
+              "keyValue": 0
+            }
+          ]
+        },
+        "returnAll": true
+      },
+      "id": "f80c2a90-e14d-4b76-9c2d-dd1e46776336",
+      "name": "All Config",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        880,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "RG303gxSIBHMskIz"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "condition": "gte",
+              "keyValue": 0
+            }
+          ]
+        },
+        "returnAll": true
+      },
+      "id": "cb1adf04-d5ae-4a95-913e-d3379d17762d",
+      "name": "All Posted",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1104,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: {} }];"
+      },
+      "id": "9d498c5f-977f-4b81-918c-822088c0d11a",
+      "name": "Reset A",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        432,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: {} }];"
+      },
+      "id": "0b934558-b201-4ad1-8df7-cfb959224cff",
+      "name": "Reset B",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        864,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://calendar.google.com/calendar/ical/c_62694f414055ac569e5cb12dafbb0890ca22f3640b177a4b10b53171fbc9bdd4%40group.calendar.google.com/public/basic.ics",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "3cb709fb-8375-4a33-a82b-cf7f7525f55a",
+      "name": "Public Calendar",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1088,
+        128
+      ],
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Daily Sweep": {
+      "main": [
+        [
+          {
+            "node": "Slack: users.list",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Zoom Token": {
+      "main": [
+        [
+          {
+            "node": "List Summaries",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List Summaries": {
+      "main": [
+        [
+          {
+            "node": "All Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Candidates": {
+      "main": [
+        [
+          {
+            "node": "Attach Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Attach Fields": {
+      "main": [
+        [
+          {
+            "node": "Get Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Summary": {
+      "main": [
+        [
+          {
+            "node": "Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gate": {
+      "main": [
+        [
+          {
+            "node": "Professional Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Skip If Already Posted": {
+      "main": [
+        [
+          {
+            "node": "Slack: conversations.members",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Message": {
+      "main": [
+        [
+          {
+            "node": "Slack: chat.postMessage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack: chat.postMessage": {
+      "main": [
+        [
+          {
+            "node": "Post OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post OK?": {
+      "main": [
+        [
+          {
+            "node": "Record Posted",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Format Full Notes",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Professional Filter": {
+      "main": [
+        [
+          {
+            "node": "Apply Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apply Filter": {
+      "main": [
+        [
+          {
+            "node": "Skip If Already Posted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Full Notes": {
+      "main": [
+        [
+          {
+            "node": "Filter Full Notes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Full Notes": {
+      "main": [
+        [
+          {
+            "node": "Apply Full Notes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apply Full Notes": {
+      "main": [
+        [
+          {
+            "node": "Post Thread Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack: conversations.members": {
+      "main": [
+        [
+          {
+            "node": "Format Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "All Config": {
+      "main": [
+        [
+          {
+            "node": "All Posted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "All Posted": {
+      "main": [
+        [
+          {
+            "node": "Build Candidates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack: users.list": {
+      "main": [
+        [
+          {
+            "node": "Reset A",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reset A": {
+      "main": [
+        [
+          {
+            "node": "Slack: conversations.list",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack: conversations.list": {
+      "main": [
+        [
+          {
+            "node": "Reset B",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reset B": {
+      "main": [
+        [
+          {
+            "node": "Public Calendar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Public Calendar": {
+      "main": [
+        [
+          {
+            "node": "Get Zoom Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "abfa1428-f8bf-4876-ac35-cc47e212fcb4",
+  "meta": {
+    "instanceId": "42566e2b3b77f028e93e74b7c60d9194d35d5cfbf8340b4442416b191d1e3a55"
+  },
+  "nodeGroups": [],
+  "id": "pLIk4d8AYwAmpxpz",
+  "tags": []
+}

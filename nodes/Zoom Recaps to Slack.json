@@ -6,7 +6,9 @@
         "httpMethod": "POST",
         "path": "c8078642-e424-4e49-9165-328bb612f92d",
         "responseMode": "responseNode",
-        "options": {}
+        "options": {
+          "rawBody": true
+        }
       },
       "id": "fe0c0dda-389f-4df5-8571-54e5e7010157",
       "name": "Webhook",
@@ -16,7 +18,168 @@
       "position": [
         0,
         -304
-      ]
+      ],
+      "notes": "Zoom calls this URL. Raw Body is on because Zoom signs the exact bytes it sends, and the signature check needs them.",
+      "notesInFlow": true
+    },
+    {
+      "id": "a2000000-0000-0000-0000-000000000001",
+      "name": "Read Raw Body",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        -304
+      ],
+      "parameters": {
+        "jsCode": "// Zoom signs the exact bytes it sent, so keep the raw request body alongside the parsed one.\n// (The Webhook node's Raw Body option stores those bytes as the binary property \"data\".)\nconst raw = (await this.helpers.getBinaryDataBuffer(0, 'data')).toString('utf8');\nreturn [{ json: { headers: $json.headers || {}, body: $json.body || {}, raw } }];\n"
+      },
+      "notes": "Keeps the raw request body next to the parsed one for the signature check.",
+      "notesInFlow": true
+    },
+    {
+      "id": "a2000000-0000-0000-0000-000000000002",
+      "name": "Webhook Secret",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        440,
+        -304
+      ],
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "W8UuKtEGH0wqmzpt"
+        },
+        "returnAll": true,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "gte",
+              "keyValue": 0
+            }
+          ]
+        }
+      },
+      "notes": "Reads the Event Subscription secret token from the Data table 'Zoom Recaps - Webhook Secret' (column secretToken). The value lives in n8n only, never in this file.",
+      "notesInFlow": true
+    },
+    {
+      "id": "a2000000-0000-0000-0000-000000000003",
+      "name": "Verify Zoom",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        -304
+      ],
+      "parameters": {
+        "jsCode": "// Decide how to answer Zoom, and whether this call should go on to post a recap.\n// - endpoint.url_validation: prove we hold the app's secret token by returning the HMAC of plainToken.\n// - anything else must carry a valid x-zm-signature (HMAC of \"v0:<timestamp>:<raw body>\"), so only\n//   Zoom can trigger a post; a bad or missing signature gets a 401 and stops here.\n// - only meeting.summary_completed goes on to the posting path.\n// Zoom wants the answer within 3 seconds, so this node only decides; the slow work runs after the reply.\nconst crypto = require('crypto');\nconst req = $('Read Raw Body').first().json;\nconst secret = String(($('Webhook Secret').first().json || {}).secretToken || '').trim();\nconst hmac = (msg) => crypto.createHmac('sha256', secret).update(msg).digest('hex');\nconst body = req.body || {};\nconst event = body.event || '';\n\nif (!secret) return [{ json: { status: 500, response: { error: 'webhook secret not configured' }, proceed: false } }];\n\nif (event === 'endpoint.url_validation') {\n  const plainToken = String((body.payload || {}).plainToken || '');\n  return [{ json: { status: 200, response: { plainToken, encryptedToken: hmac(plainToken) }, proceed: false } }];\n}\n\nconst sent = String(req.headers['x-zm-signature'] || '');\nconst expected = 'v0=' + hmac('v0:' + (req.headers['x-zm-request-timestamp'] || '') + ':' + req.raw);\nconst valid = sent.length === expected.length && crypto.timingSafeEqual(Buffer.from(sent), Buffer.from(expected));\nif (!valid) return [{ json: { status: 401, response: { error: 'invalid signature' }, proceed: false } }];\n\nconst obj = (body.payload || {}).object || {};\nreturn [{ json: {\n  status: 200,\n  response: { ok: true },\n  proceed: event === 'meeting.summary_completed',\n  meetingId: String(obj.meeting_id || obj.id || ''),\n  meetingUuid: obj.meeting_uuid || obj.uuid || '',\n} }];\n"
+      },
+      "notes": "Answers Zoom's URL validation with the HMAC of its challenge, and requires a valid x-zm-signature on every other call (401 otherwise). Decides the reply; does not post.",
+      "notesInFlow": true
+    },
+    {
+      "id": "a2000000-0000-0000-0000-000000000004",
+      "name": "Respond to Zoom",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        880,
+        -304
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json.response) }}",
+        "options": {
+          "responseCode": "={{ $json.status }}"
+        }
+      },
+      "notes": "Sends Verify Zoom's answer back to Zoom right away, inside Zoom's 3 second limit.",
+      "notesInFlow": true
+    },
+    {
+      "id": "a2000000-0000-0000-0000-000000000005",
+      "name": "Summary Completed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1100,
+        -304
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.proceed }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "notes": "Only a meeting.summary_completed event with a valid signature goes on.",
+      "notesInFlow": true
+    },
+    {
+      "id": "a2000000-0000-0000-0000-000000000006",
+      "name": "Configured Meeting?",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1320,
+        -304
+      ],
+      "parameters": {
+        "operation": "rowExists",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "zhSysUVAmqepqX5I"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "meetingId",
+              "keyValue": "={{ $json.meetingId }}"
+            }
+          ]
+        }
+      },
+      "notes": "Only a meeting listed in the Config Data table goes on.",
+      "notesInFlow": true
+    },
+    {
+      "id": "a2000000-0000-0000-0000-000000000007",
+      "name": "Let Summary Settle",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1540,
+        -304
+      ],
+      "webhookId": "5f0e6c1e-6a52-4d0b-9a3e-2b7f4c9d8e11",
+      "parameters": {
+        "amount": 20,
+        "unit": "minutes"
+      },
+      "notes": "Waits 20 minutes so Zoom finishes refining the summary, then joins the same posting path as the daily sweep.",
+      "notesInFlow": true
     },
     {
       "parameters": {
@@ -974,6 +1137,94 @@
         [
           {
             "node": "Get Zoom Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Read Raw Body",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Raw Body": {
+      "main": [
+        [
+          {
+            "node": "Webhook Secret",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Secret": {
+      "main": [
+        [
+          {
+            "node": "Verify Zoom",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify Zoom": {
+      "main": [
+        [
+          {
+            "node": "Respond to Zoom",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Zoom": {
+      "main": [
+        [
+          {
+            "node": "Summary Completed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summary Completed?": {
+      "main": [
+        [
+          {
+            "node": "Configured Meeting?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Configured Meeting?": {
+      "main": [
+        [
+          {
+            "node": "Let Summary Settle",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Let Summary Settle": {
+      "main": [
+        [
+          {
+            "node": "Slack: users.list",
             "type": "main",
             "index": 0
           }

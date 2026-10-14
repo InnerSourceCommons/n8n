@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# NOTE: This doesn't work with the $20/month starter plan. (no API access)
-# It does, however, work well with a local instance.
+# Works against the ISC n8n Cloud instance and a local instance; set N8N_API_KEY.
 # https://innersourcecommons.app.n8n.cloud/
 
 # Check if a file was provided

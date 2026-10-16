@@ -7,6 +7,20 @@
   2. To run a workflow with Google Drive, set up OAuth2 credentials in Google Cloud Console, [here](https://console.cloud.google.com/apis/credentials).
 4. Ask in the [#ispo-working-group](#ispo-working-group) for help with this repository.
 
+## Publishing workflows to n8n Cloud
+
+Merging a change to a workflow JSON under `nodes/` into `main` publishes it to <https://innersourcecommons.app.n8n.cloud/> automatically, through the `Publish workflows to n8n Cloud` GitHub Action.
+The Action publishes only the workflow files that changed in the push.
+Each file is matched to its workflow by the `id` field in the JSON.
+Publishing replaces the workflow's name, nodes, connections, settings, and static data, and leaves its active or inactive state as it is.
+
+To republish by hand, run the Action from the repository's Actions tab (`Run workflow`).
+Leave the file blank to publish every workflow, or give one path such as `nodes/Zoom Recaps to Slack.json`.
+
+The Action reads the API key from the `N8N_API_KEY` repository secret.
+
+To push a workflow from your own machine, or to a local instance, run `N8N_API_KEY=<key> scripts/update-workflow.sh <file>`.
+
 ## Credential errors (e.g. “does not exist for type …”)
 
 n8n stores credentials by **ID** on the server. If you see `Credential with ID "…" does not exist for type "googleDriveOAuth2Api"` on a node such as **Get All Folders**:

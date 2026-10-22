@@ -1,11 +1,17 @@
 #!/bin/bash
 
-# Works against the ISC n8n Cloud instance and a local instance; set N8N_API_KEY.
-# https://innersourcecommons.app.n8n.cloud/
+# Pushes one workflow JSON file to https://innersourcecommons.app.n8n.cloud/
+# using the API key in $N8N_API_KEY. CI runs this for each workflow merged to main.
+# Exits non-zero unless the API answers 200.
 
 # Check if a file was provided
 if [ -z "$1" ]; then
   echo "Usage: ./update-workflow.sh <path-to-workflow.json>"
+  exit 1
+fi
+
+if [ -z "$N8N_API_KEY" ]; then
+  echo "Error: N8N_API_KEY is not set."
   exit 1
 fi
 
@@ -30,7 +36,8 @@ jq '{name, nodes, connections, settings, staticData} | with_entries(select(.valu
 # Update the workflow
 # The API expects the workflow JSON object in the body.
 # We assume the file contains the full workflow object.
-response=$(curl -s -X PUT "$BASE_URL/workflows/$WORKFLOW_ID" \
+RESPONSE_FILE=$(mktemp)
+status=$(curl -s -o "$RESPONSE_FILE" -w "%{http_code}" -X PUT "$BASE_URL/workflows/$WORKFLOW_ID" \
   -H "X-N8N-API-KEY: $N8N_API_KEY" \
   -H "Content-Type: application/json" \
   -d @"$CLEAN_JSON_FILE")
@@ -38,12 +45,13 @@ response=$(curl -s -X PUT "$BASE_URL/workflows/$WORKFLOW_ID" \
 # Clean up
 rm "$CLEAN_JSON_FILE"
 
-# Check if update was successful (look for id in response)
-if echo "$response" | grep -q "\"id\":\"$WORKFLOW_ID\""; then
+if [ "$status" == "200" ]; then
   echo "Successfully updated workflow."
+  rm "$RESPONSE_FILE"
 else
-  echo "Failed to update workflow. Response:"
-  echo "$response"
+  echo "Failed to update workflow (HTTP $status). Response:"
+  cat "$RESPONSE_FILE"
+  rm "$RESPONSE_FILE"
   exit 1
 fi
 

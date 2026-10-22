@@ -1,0 +1,59 @@
+name: Publish workflows to n8n Cloud
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "nodes/**/*.json"
+  workflow_dispatch:
+    inputs:
+      file:
+        description: "Workflow file to publish (blank publishes every workflow under nodes/)"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-n8n
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+      BEFORE_SHA: ${{ github.event.before }}
+      AFTER_SHA: ${{ github.sha }}
+      INPUT_FILE: ${{ inputs.file }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Collect workflow files
+        run: |
+          set -euo pipefail
+          git config core.quotepath off
+          if [ "${{ github.event_name }}" == "push" ] && [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ]; then
+            git diff -z --name-only --diff-filter=AM "$BEFORE_SHA" "$AFTER_SHA" -- 'nodes/*.json' > "$RUNNER_TEMP/files.list"
+          elif [ -n "$INPUT_FILE" ]; then
+            printf '%s\0' "$INPUT_FILE" > "$RUNNER_TEMP/files.list"
+          else
+            git ls-files -z -- 'nodes/*.json' > "$RUNNER_TEMP/files.list"
+          fi
+          echo "Workflows to publish: $(tr -cd '\0' < "$RUNNER_TEMP/files.list" | wc -c)"
+
+      - name: Publish
+        run: |
+          set -euo pipefail
+          failed=0
+          while IFS= read -r -d '' file; do
+            echo "::group::$file"
+            if ! bash scripts/update-workflow.sh "$file"; then
+              failed=1
+            fi
+            echo "::endgroup::"
+          done < "$RUNNER_TEMP/files.list"
+          exit "$failed"

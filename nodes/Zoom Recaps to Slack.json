@@ -175,10 +175,10 @@
       ],
       "webhookId": "5f0e6c1e-6a52-4d0b-9a3e-2b7f4c9d8e11",
       "parameters": {
-        "amount": 20,
+        "amount": 60,
         "unit": "minutes"
       },
-      "notes": "Waits 20 minutes so Zoom finishes refining the summary, then joins the same posting path as the daily sweep.",
+      "notes": "Waits 1 hour so Zoom finishes refining the summary (it rewrites it about 20 minutes after creating it) and the Gate's 15 minute cooldown has passed, then joins the same posting path as the daily sweep.",
       "notesInFlow": true
     },
     {

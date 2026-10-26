@@ -6,7 +6,8 @@ Recaps post to the team channel automatically.
 
 The workflow has two ways in, and both feed one shared posting path:
 
-1. **Webhook**: Zoom calls the workflow when a meeting's summary finishes, and the recap posts about 20 minutes later, so the summary has finished settling.
+1. **Webhook**: Zoom calls the workflow when a meeting's summary finishes, and the recap posts about 40 minutes later.
+   Zoom rewrites a summary about 20 minutes after creating it, and the Gate only passes a summary that has been quiet for 15 minutes, so the 40 minute wait lets the rewrite land and the cooldown clear before the recap is fetched.
 2. **Daily sweep**: a Schedule Trigger runs each morning, asks Zoom for the previous day's meeting summaries, and posts anything the webhook missed.
    Zoom's summary webhook sometimes doesn't fire, and the sweep covers those misses.
 

@@ -14,7 +14,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const staticData = $getWorkflowStaticData('global');\nstaticData.allMembers = [];\nreturn [{ json: { cursor: '' } }];"
+        "jsCode": "// Code comes from src/send-bulk-dm/init-pagination.js at build time."
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -49,7 +49,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const staticData = $getWorkflowStaticData('global');\nconst response = $input.first().json;\nif (response.members) {\n  staticData.allMembers.push(...response.members);\n}\nconst nextCursor = response.response_metadata?.next_cursor || '';\nreturn [{ json: { cursor: nextCursor } }];"
+        "jsCode": "// Code comes from src/send-bulk-dm/collect-members.js at build time."
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -94,7 +94,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const staticData = $getWorkflowStaticData('global');\nconst allMembers = staticData.allMembers || [];\nreturn [{ json: { members: allMembers } }];"
+        "jsCode": "// Code comes from src/send-bulk-dm/output-all-members.js at build time."
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,

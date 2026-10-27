@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "nodes/**/*.json"
+      - "src/**/*.js"
   workflow_dispatch:
     inputs:
       file:
@@ -37,7 +38,8 @@ jobs:
           set -euo pipefail
           git config core.quotepath off
           if [ "${{ github.event_name }}" == "push" ] && [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ]; then
-            git diff -z --name-only --diff-filter=AM "$BEFORE_SHA" "$AFTER_SHA" -- 'nodes/*.json' > "$RUNNER_TEMP/files.list"
+            git diff -z --name-only --diff-filter=AM "$BEFORE_SHA" "$AFTER_SHA" -- 'nodes/*.json' 'src/*.js' \
+              | node scripts/code-nodes.js affected > "$RUNNER_TEMP/files.list"
           elif [ -n "$INPUT_FILE" ]; then
             printf '%s\0' "$INPUT_FILE" > "$RUNNER_TEMP/files.list"
           else

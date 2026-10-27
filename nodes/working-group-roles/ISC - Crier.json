@@ -72,7 +72,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const item = $input.first().json;\nconst d = item.utcDate;\nconst q = item.query;\nconst blocks = {\n  blocks: [\n    { type: 'section', text: { type: 'mrkdwn', text: `<!here> Reminder: InnerSource Working Group call happens ${d.dayofweekname} at ${q.time} UTC :tada:\\n\\nThis is an excellent meeting for newcomers looking to learn about InnerSource. All are welcome to join!` } },\n    { type: 'divider' },\n    { type: 'section', text: { type: 'mrkdwn', text: `*This meeting's topic:*\\n\\n${q.topic}` } },\n    { type: 'divider' },\n    { type: 'section', fields: [\n      { type: 'mrkdwn', text: `:spiral_calendar_pad: *Date:*\\n${d.dayofweekname}, ${d.monthname} ${d.ordinal}` },\n      { type: 'mrkdwn', text: ':alarm_clock: *Time:*\\nMultiple time zones below' }\n    ] },\n    { type: 'section', text: { type: 'mrkdwn', text: `*Time Zones:*\\n${d.timeZonesText}` } },\n    { type: 'divider' },\n    { type: 'section', text: { type: 'mrkdwn', text: `:link: <${q.meeting_notes_url}>\\n:link: <https://innersourcecommons.org/calendar/|InnerSource Commons Calendar>` } },\n    { type: 'actions', elements: [ { type: 'button', text: { type: 'plain_text', text: 'Join Meeting', emoji: true }, url: 'https://us06web.zoom.us/j/84987611486?pwd=Biw6cc9UwWI6FrM51Ugox10sClIP6n.1', style: 'danger' } ] }\n  ]\n};\nreturn [{ json: { ...item, blocks } }];"
+        "jsCode": "// Code comes from src/working-group-roles/isc-crier/build-slack-blocks.js at build time."
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,

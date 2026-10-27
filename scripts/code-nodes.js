@@ -1,16 +1,19 @@
 #!/usr/bin/env node
 
-// Keeps each workflow's Code-node JavaScript in its own .js file under src/
-// and writes it back into the workflow JSON under nodes/.
+// Keeps each workflow's Code-node JavaScript in its own .js file under src/.
+// In the committed workflow JSON under nodes/, each Code node's jsCode is a one-line
+// placeholder naming its source file, and the code is filled in whenever the workflow
+// is published or built.
 //
-//   node scripts/code-nodes.js build    write src/**/*.js into nodes/**/*.json
-//   node scripts/code-nodes.js check    exit 1 if nodes/ differs from what build would write
-//   node scripts/code-nodes.js extract  rewrite src/ from each Code node's jsCode, removing files whose node is gone
+//   node scripts/code-nodes.js render <workflow.json>  print the workflow with its code filled in
+//   node scripts/code-nodes.js build                   write every filled-in workflow to dist/
+//   node scripts/code-nodes.js check                   exit 1 unless every Code node points at a source file and every source file is used
+//   node scripts/code-nodes.js extract                 move real code found in nodes/ into src/, leaving placeholders
+//   node scripts/code-nodes.js affected                read changed paths (NUL-separated) on stdin, print the workflows they touch
 //
-// A Code node's source lives at src/<folder under nodes>/<workflow slug>/<node slug>.js,
+// Extract names a Code node's source file src/<folder under nodes>/<workflow slug>/<node slug>.js,
 // where each slug is the name lowercased with every run of non-alphanumeric characters turned into a hyphen.
-// Build rewrites only the jsCode string of a node whose code changed, so the rest of
-// the JSON stays byte-for-byte as it was and a diff shows only the changed node.
+// Every edit replaces only jsCode strings, so the rest of the JSON stays byte-for-byte as it was.
 
 const fs = require('fs');
 const path = require('path');
@@ -18,6 +21,13 @@ const path = require('path');
 const ROOT = path.resolve(__dirname, '..');
 const NODES_DIR = path.join(ROOT, 'nodes');
 const SRC_DIR = path.join(ROOT, 'src');
+const DIST_DIR = path.join(ROOT, 'dist');
+
+const PLACEHOLDER = /^\/\/ Code comes from (src\/\S+\.js) at build time\.$/;
+
+function placeholder(srcFile) {
+  return `// Code comes from ${rel(srcFile)} at build time.`;
+}
 
 function walk(dir, ext) {
   if (!fs.existsSync(dir)) return [];
@@ -62,6 +72,8 @@ function findJsCodeLiterals(raw) {
 }
 
 // Loads one workflow and pairs each Code node with its jsCode literal in the raw text.
+// A node whose jsCode is a placeholder gets the source file it names; any other node
+// holds real code and gets the source file extract would write it to.
 function loadWorkflow(file) {
   const raw = fs.readFileSync(file, 'utf8');
   const workflow = JSON.parse(raw);
@@ -78,17 +90,14 @@ function loadWorkflow(file) {
     path.relative(NODES_DIR, path.dirname(file)),
     slug(path.basename(file, '.json'))
   );
-  const seen = new Map();
   const nodes = codeNodes.map((node, i) => {
-    if (literals[i].value !== node.parameters.jsCode) {
+    const code = node.parameters.jsCode;
+    if (literals[i].value !== code) {
       throw new Error(`${rel(file)}: jsCode strings are not in node order near "${node.name}"`);
     }
-    const srcFile = path.join(workflowDir, `${slug(node.name)}.js`);
-    if (seen.has(srcFile)) {
-      throw new Error(`${rel(file)}: nodes "${seen.get(srcFile)}" and "${node.name}" both map to ${rel(srcFile)}; rename one`);
-    }
-    seen.set(srcFile, node.name);
-    return { name: node.name, code: node.parameters.jsCode, srcFile, literal: literals[i] };
+    const m = code.match(PLACEHOLDER);
+    const srcFile = m ? path.join(ROOT, m[1]) : path.join(workflowDir, `${slug(node.name)}.js`);
+    return { name: node.name, code, isPlaceholder: !!m, srcFile, literal: literals[i] };
   });
   return { file, raw, nodes };
 }
@@ -108,7 +117,7 @@ function fromSource(text) {
   return text.replace(/\r\n/g, '\n').replace(/\n$/, '');
 }
 
-// Returns the workflow's raw text with every changed node's jsCode replaced.
+// Returns the workflow's raw text with each node's jsCode string replaced by codeFor(node).
 function render(workflow, codeFor) {
   let out = '';
   let pos = 0;
@@ -121,77 +130,123 @@ function render(workflow, codeFor) {
   return out + workflow.raw.slice(pos);
 }
 
-function readSources(workflows) {
-  const errors = [];
-  const expected = new Set();
-  for (const wf of workflows) {
-    for (const node of wf.nodes) {
-      expected.add(node.srcFile);
-      if (!fs.existsSync(node.srcFile)) {
-        errors.push(`${rel(wf.file)}: Code node "${node.name}" has no source file ${rel(node.srcFile)} (run extract)`);
-      }
-    }
-  }
-  for (const f of walk(SRC_DIR, '.js')) {
-    if (!expected.has(f)) errors.push(`${rel(f)} matches no Code node in nodes/`);
-  }
-  if (errors.length) {
-    errors.forEach((e) => console.error(`Error: ${e}`));
-    process.exit(1);
-  }
+function readSource(node) {
+  return fromSource(fs.readFileSync(node.srcFile, 'utf8'));
 }
 
-function build(write) {
-  const workflows = loadAll();
-  readSources(workflows);
-  const stale = [];
+// Lists everything that keeps the workflows from building; with all set, the workflows
+// are the whole of nodes/ and a source file none of them uses is a problem too.
+function problems(workflows, all = true) {
+  const errors = [];
+  const used = new Map();
   for (const wf of workflows) {
-    const out = render(wf, (node) => fromSource(fs.readFileSync(node.srcFile, 'utf8')));
-    if (out === wf.raw) continue;
-    stale.push(rel(wf.file));
-    if (write) fs.writeFileSync(wf.file, out);
+    for (const node of wf.nodes) {
+      const where = `${rel(wf.file)}: Code node "${node.name}"`;
+      if (!node.isPlaceholder) {
+        errors.push(`${where} holds its code in the JSON; run "make extract" to move it to src/`);
+        continue;
+      }
+      if (used.has(node.srcFile)) {
+        errors.push(`${where} points at ${rel(node.srcFile)}, which ${used.get(node.srcFile)} already uses`);
+      }
+      used.set(node.srcFile, where);
+      if (!fs.existsSync(node.srcFile)) errors.push(`${where} points at ${rel(node.srcFile)}, which does not exist`);
+    }
   }
-  if (write) {
-    console.log(stale.length ? `Built ${stale.join(', ')}` : 'Workflow JSON already matches src/.');
-    return;
+  for (const f of all ? walk(SRC_DIR, '.js') : []) {
+    if (!used.has(f)) errors.push(`${rel(f)} is used by no Code node in nodes/`);
   }
-  if (stale.length) {
-    stale.forEach((f) => console.error(`Error: ${f} does not match its src/ code; run "make build" and commit the result`));
-    process.exit(1);
+  return errors;
+}
+
+function failOn(errors) {
+  if (!errors.length) return;
+  errors.forEach((e) => console.error(`Error: ${e}`));
+  process.exit(1);
+}
+
+function renderOne(file) {
+  const wf = loadWorkflow(path.resolve(file));
+  failOn(problems([wf], false));
+  process.stdout.write(render(wf, readSource));
+}
+
+function build() {
+  const workflows = loadAll();
+  failOn(problems(workflows));
+  fs.rmSync(DIST_DIR, { recursive: true, force: true });
+  for (const wf of workflows) {
+    const out = path.join(DIST_DIR, path.relative(NODES_DIR, wf.file));
+    fs.mkdirSync(path.dirname(out), { recursive: true });
+    fs.writeFileSync(out, render(wf, readSource));
   }
-  console.log('Workflow JSON matches src/.');
+  console.log(`Built ${workflows.length} workflows into dist/.`);
+}
+
+function check() {
+  failOn(problems(loadAll()));
+  console.log('Every Code node points at a source file in src/.');
 }
 
 function extract() {
   const workflows = loadAll();
-  const written = new Set();
+  const claimed = new Map();
   for (const wf of workflows) {
     for (const node of wf.nodes) {
-      // Build re-serializes jsCode with JSON.stringify, so check that the file extract is
-      // about to write would rebuild this node's jsCode literal byte for byte.
+      const owner = `${rel(wf.file)}: "${node.name}"`;
+      if (claimed.has(node.srcFile)) {
+        throw new Error(`${owner} and ${claimed.get(node.srcFile)} both map to ${rel(node.srcFile)}; rename one`);
+      }
+      claimed.set(node.srcFile, owner);
+    }
+  }
+
+  let moved = 0;
+  for (const wf of workflows) {
+    const real = wf.nodes.filter((node) => !node.isPlaceholder);
+    if (!real.length) continue;
+    for (const node of real) {
+      // Publishing re-serializes the code with JSON.stringify, so check that the file
+      // extract is about to write would rebuild this node's jsCode literal byte for byte.
       const rebuilt = JSON.stringify(fromSource(toSource(node.code)));
       if (rebuilt !== wf.raw.slice(node.literal.start, node.literal.end)) {
-        throw new Error(`${rel(wf.file)}: build would not reproduce the jsCode of "${node.name}"`);
+        throw new Error(`${rel(wf.file)}: publishing would not reproduce the jsCode of "${node.name}"`);
       }
       fs.mkdirSync(path.dirname(node.srcFile), { recursive: true });
       fs.writeFileSync(node.srcFile, toSource(node.code));
-      written.add(node.srcFile);
+      moved++;
     }
+    fs.writeFileSync(wf.file, render(wf, (node) => (node.isPlaceholder ? node.code : placeholder(node.srcFile))));
   }
+
   for (const f of walk(SRC_DIR, '.js')) {
-    if (!written.has(f)) {
+    if (!claimed.has(f)) {
       fs.unlinkSync(f);
       console.log(`Removed ${rel(f)} (no matching Code node)`);
     }
   }
-  console.log(`Extracted ${written.size} Code nodes to src/.`);
+  console.log(`Moved ${moved} Code nodes' code into src/.`);
 }
 
-const command = process.argv[2];
-if (command === 'build') build(true);
-else if (command === 'check') build(false);
+// Publishing on merge sends the workflows a push touched: each changed workflow JSON,
+// plus each workflow with a Code node whose source file changed.
+function affected() {
+  const changed = new Set(
+    fs.readFileSync(0, 'utf8').split('\0').filter(Boolean).map((p) => path.join(ROOT, p))
+  );
+  const out = loadAll()
+    .filter((wf) => changed.has(wf.file) || wf.nodes.some((node) => changed.has(node.srcFile)))
+    .map((wf) => `${rel(wf.file)}\0`);
+  process.stdout.write(out.join(''));
+}
+
+const [command, arg] = process.argv.slice(2);
+if (command === 'render' && arg) renderOne(arg);
+else if (command === 'build') build();
+else if (command === 'check') check();
 else if (command === 'extract') extract();
+else if (command === 'affected') affected();
 else {
-  console.error('Usage: node scripts/code-nodes.js build|check|extract');
+  console.error('Usage: node scripts/code-nodes.js render <workflow.json>|build|check|extract|affected');
   process.exit(1);
 }

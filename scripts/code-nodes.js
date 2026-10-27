@@ -10,6 +10,7 @@
 //   node scripts/code-nodes.js check                   exit 1 unless every Code node points at a source file and every source file is used
 //   node scripts/code-nodes.js extract                 move real code found in nodes/ into src/, leaving placeholders
 //   node scripts/code-nodes.js affected                read changed paths (NUL-separated) on stdin, print the workflows they touch
+//   node scripts/code-nodes.js compare <base> <head>   report how two built dist/ folders differ, as markdown
 //
 // Extract names a Code node's source file src/<folder under nodes>/<workflow slug>/<node slug>.js,
 // where each slug is the name lowercased with every run of non-alphanumeric characters turned into a hyphen.
@@ -240,13 +241,59 @@ function affected() {
   process.stdout.write(out.join(''));
 }
 
-const [command, arg] = process.argv.slice(2);
+// Prints a markdown report of how each built workflow in headDir differs from its
+// counterpart in baseDir.
+function compare(baseDir, headDir) {
+  const files = (dir) => new Set(walk(path.resolve(dir), '.json').map((f) => path.relative(path.resolve(dir), f)));
+  const base = files(baseDir);
+  const head = files(headDir);
+  const read = (dir, f) => fs.readFileSync(path.join(dir, f), 'utf8').replace(/\r\n/g, '\n');
+  const codeOf = (wf) => new Map((wf.nodes || []).map((n) => [n.name, n.parameters && n.parameters.jsCode]));
+  const withoutCode = (wf) => JSON.stringify({
+    ...wf,
+    nodes: (wf.nodes || []).map((n) => ({ ...n, parameters: { ...n.parameters, jsCode: undefined } })),
+  });
+
+  const rows = [...new Set([...base, ...head])].sort().map((f) => {
+    const name = f.split(path.sep).join('/');
+    if (!base.has(f)) return [name, 'new workflow'];
+    if (!head.has(f)) return [name, 'removed from the repo'];
+    const before = read(baseDir, f);
+    const after = read(headDir, f);
+    if (before === after) return [name, 'identical'];
+    const [b, a] = [JSON.parse(before), JSON.parse(after)];
+    const [bCode, aCode] = [codeOf(b), codeOf(a)];
+    const changes = [];
+    const nodeNames = [...new Set([...bCode.keys(), ...aCode.keys()])];
+    const codeChanged = nodeNames.filter((n) => bCode.has(n) && aCode.has(n) && bCode.get(n) !== aCode.get(n));
+    const added = nodeNames.filter((n) => !bCode.has(n));
+    const removed = nodeNames.filter((n) => !aCode.has(n));
+    if (codeChanged.length) changes.push(`code changed in ${codeChanged.map((n) => `"${n}"`).join(', ')}`);
+    if (added.length) changes.push(`nodes added: ${added.map((n) => `"${n}"`).join(', ')}`);
+    if (removed.length) changes.push(`nodes removed: ${removed.map((n) => `"${n}"`).join(', ')}`);
+    if (withoutCode(b) !== withoutCode(a) && !added.length && !removed.length) changes.push('changes outside the Code nodes\' code');
+    if (!changes.length) changes.push('formatting changed');
+    return [name, changes.join('; ')];
+  });
+
+  const changed = rows.filter(([, status]) => status !== 'identical').length;
+  console.log('## Built workflows compared with the base branch\n');
+  console.log(changed
+    ? `${changed} of ${rows.length} workflows differ from the base branch.\n`
+    : `All ${rows.length} workflows match the base branch.\n`);
+  console.log('| Workflow | Compared with the base branch |');
+  console.log('|---|---|');
+  rows.forEach(([name, status]) => console.log(`| ${name} | ${status} |`));
+}
+
+const [command, arg, arg2] = process.argv.slice(2);
 if (command === 'render' && arg) renderOne(arg);
+else if (command === 'compare' && arg && arg2) compare(arg, arg2);
 else if (command === 'build') build();
 else if (command === 'check') check();
 else if (command === 'extract') extract();
 else if (command === 'affected') affected();
 else {
-  console.error('Usage: node scripts/code-nodes.js render <workflow.json>|build|check|extract|affected');
+  console.error('Usage: node scripts/code-nodes.js render <workflow.json>|build|check|extract|affected|compare <base dir> <head dir>');
   process.exit(1);
 }

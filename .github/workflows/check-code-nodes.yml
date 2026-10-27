@@ -16,3 +16,27 @@ jobs:
 
       - name: Check
         run: node scripts/code-nodes.js check
+
+  # Builds what publishing would send to n8n from this pull request and from its base
+  # branch, and writes the difference to the run's summary page for reviewers.
+  preview:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    env:
+      BASE_SHA: ${{ github.event.pull_request.base.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compare with the base branch
+        run: |
+          set -euo pipefail
+          node scripts/code-nodes.js build
+          git worktree add "$RUNNER_TEMP/base" "$BASE_SHA"
+          if [ -f "$RUNNER_TEMP/base/scripts/code-nodes.js" ]; then
+            node "$RUNNER_TEMP/base/scripts/code-nodes.js" build
+          else
+            cp -r "$RUNNER_TEMP/base/nodes" "$RUNNER_TEMP/base/dist"
+          fi
+          node scripts/code-nodes.js compare "$RUNNER_TEMP/base/dist" dist | tee -a "$GITHUB_STEP_SUMMARY"

@@ -27,6 +27,7 @@ To change a Code node, edit its file under `src/` and commit it.
 
 `make build` writes every workflow with its code filled in to `dist/`, ready to import into an n8n instance by hand.
 The `Check Code nodes point at src/` GitHub Action fails a pull request in which a Code node holds code instead of naming a file, names a file that doesn't exist, or a file under `src/` belongs to no Code node; run `make check` to see the same result locally.
+On a pull request, the same Action's `preview` job builds what publishing would send to n8n from the pull request and from its base branch, and lists each workflow as identical or names what changed, on the run's summary page.
 
 When a workflow comes from an export of the n8n editor, its Code nodes hold their real code.
 Copy the export over the workflow's file under `nodes/` and run `make extract`, which moves each node's code into `src/` and puts the one-line comment back in the JSON.

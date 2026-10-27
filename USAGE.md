@@ -16,6 +16,24 @@ Publishing replaces the workflow's name, nodes, connections, settings, and stati
 
 The Action reads the API key from the `N8N_API_KEY` repository secret.
 
+## Editing a Code node's JavaScript
+
+Each Code node's JavaScript lives in its own file under `src/`, so a pull request shows a code change as ordinary lines of JavaScript.
+A Code node's file is `src/<subfolder under nodes/>/<workflow file name>/<node name>.js`, with each name lowercased and every run of other characters turned into a hyphen.
+The code runs as the body of an n8n Code node, so a top-level `return` and n8n's built-in globals are valid there even where an editor marks them as errors.
+
+To change a Code node:
+
+1. Edit its file under `src/`.
+2. Run `make build` (or `node scripts/code-nodes.js build`), which writes the code into the workflow JSON under `nodes/` and changes only the edited node's `jsCode` line.
+3. Commit both the `.js` file and the workflow JSON.
+
+The workflow JSON stays committed because it is what publishing sends to n8n Cloud.
+The `Check Code-node source matches workflow JSON` GitHub Action fails a pull request whose workflow JSON differs from what `make build` writes from `src/`; run `make check` to see the same result locally.
+
+When a workflow comes from an export of the n8n editor, or gains, loses, or renames a Code node, run `make extract` to rewrite `src/` from the workflow JSON.
+Extract writes one file per Code node, removes files whose node is gone, and stops with an error if building from those files would not reproduce the workflow JSON byte for byte.
+
 ## Credential errors (e.g. “does not exist for type …”)
 
 n8n stores credentials by **ID** on the server. If you see `Credential with ID "…" does not exist for type "googleDriveOAuth2Api"` on a node such as **Get All Folders**:

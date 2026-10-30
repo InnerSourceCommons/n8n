@@ -28,10 +28,17 @@ fi
 
 echo "Updating Workflow ID: $WORKFLOW_ID"
 
-# Create a temporary file with the cleaned JSON payload
+# Create a temporary file with the cleaned JSON payload, with each Code node's
+# code filled in from src/
 # Select only allowed fields and remove null values (active and tags are read-only)
+set -o pipefail
 CLEAN_JSON_FILE=$(mktemp)
-jq '{name, nodes, connections, settings, staticData} | with_entries(select(.value != null))' "$WORKFLOW_FILE" > "$CLEAN_JSON_FILE"
+if ! node "$(dirname "$0")/code-nodes.js" render "$WORKFLOW_FILE" \
+  | jq '{name, nodes, connections, settings, staticData} | with_entries(select(.value != null))' > "$CLEAN_JSON_FILE"; then
+  echo "Error: Could not build the workflow from $WORKFLOW_FILE and src/."
+  rm "$CLEAN_JSON_FILE"
+  exit 1
+fi
 
 # Update the workflow
 # The API expects the workflow JSON object in the body.

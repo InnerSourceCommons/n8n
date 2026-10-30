@@ -59,11 +59,11 @@ The JSON carries the credential ids of the ISC instance, which a different insta
 ## Loading a change into n8n
 
 The workflow's n8n id is `pLIk4d8AYwAmpxpz`.
-After a change to `Zoom Recaps to Slack.json` merges, load it with:
+After a change to `Zoom Recaps to Slack.json` or to its code under `src/zoom-recaps-to-slack/` merges, load it with:
 
 ```bash
 N8N_API_KEY=<your key> ./scripts/update-workflow.sh "nodes/Zoom Recaps to Slack.json"
 ```
 
-The script sends the file to the n8n public API with a PUT.
+The script fills in each Code node's code from `src/zoom-recaps-to-slack/` and sends the workflow to the n8n public API with a PUT.
 Check in the editor that the workflow is still active afterwards.

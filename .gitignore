@@ -22,6 +22,9 @@ Thumbs.db
 # Docker volumes and data
 n8n_data/
 
+# Workflows built with their Code-node code filled in (make build)
+dist/
+
 # Temporary files
 *.tmp
 *.log

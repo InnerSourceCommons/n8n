@@ -12,8 +12,8 @@ The workflow has two ways in, and both feed one shared posting path:
    Zoom's summary webhook sometimes doesn't fire, and the sweep covers those misses.
 
 Both paths post only meetings listed in the Config table below.
-A webhook run posts only an occurrence that started in the last 24 hours, and the sweep only one from the last 72 hours.
-Zoom's summary list ignores its date window and returns every summary back to 2024, while the Posted table starts in August 2026, so the age cutoff is what stops an old, never-posted occurrence from going out as a new recap.
+Within a series, only an occurrence that started after the newest one already posted can post; an earlier occurrence that never posted stays unposted.
+Zoom's summary list ignores its date window and returns every summary back to 2024, while the Posted table starts in August 2026, so this rule is what stops an old, never-posted occurrence from going out as a new recap.
 
 ### Data tables
 

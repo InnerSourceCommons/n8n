@@ -1,6 +1,5 @@
 // Pick the one meeting to post this run: the newest UNPOSTED occurrence of any configured meeting
-// (on a webhook run, of the triggering meeting only), started within the last 24 hours on a webhook run
-// or 72 hours on the sweep, whose summary is ready to post (see readyToPost). An occurrence with nothing to post - a room started
+// (on a webhook run, of the triggering meeting only), recent enough to pass the age cutoff, whose summary is ready to post (see readyToPost). An occurrence with nothing to post - a room started
 // and stopped in seconds, a summary Zoom never generated, a failed fetch - is skipped, never allowed to
 // block the occurrences behind it. Calendar guardrail: a meeting headed for a PUBLIC channel
 // must match a scheduled public-calendar event (same Zoom meeting id + weekday/time) - this stops a
@@ -53,16 +52,13 @@ try { trigger = $('Verify Zoom').first().json; } catch (e) { trigger = null; }
 const triggerId = trigger && trigger.meetingId ? String(trigger.meetingId) : '';
 const triggerUuid = trigger && trigger.meetingUuid ? String(trigger.meetingUuid) : '';
 
-// Zoom's summary list ignores the from/to window and returns every summary back to 2024, and the Posted
-// table only starts in August 2026, so without an age cutoff the sweep walks back through history one
-// old recap a day. A webhook run serves the meeting that just ended; the sweep catches a missed webhook
-// from the last few days.
-const MAX_AGE_HOURS = triggerId ? 24 : 72;
-const isFresh = (s) => (Date.now() - new Date(s.meeting_start_time).getTime()) / 3600000 <= MAX_AGE_HOURS;
+// Age cutoff: 24 hours on a webhook run, 72 on the sweep. "How It Works" in
+// nodes/ZOOM_RECAPS_TO_SLACK.md gives the reason.
+const cutoff = Date.now() - (triggerId ? 24 : 72) * 3600000;
 
 // Every fresh, unposted occurrence of a configured meeting, newest first.
 let eligible = all
-  .filter(s => config[String(s.meeting_id)] && !posted.has(s.meeting_uuid) && isFresh(s))
+  .filter(s => config[String(s.meeting_id)] && !posted.has(s.meeting_uuid) && new Date(s.meeting_start_time) >= cutoff)
   .filter(s => !triggerId || String(s.meeting_id) === triggerId)
   .sort((a, b) => new Date(b.meeting_start_time) - new Date(a.meeting_start_time));
 // Prefer the exact occurrence that triggered the webhook; if the list doesn't show it yet, fall back to

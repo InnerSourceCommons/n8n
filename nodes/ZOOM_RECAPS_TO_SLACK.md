@@ -8,12 +8,13 @@ The workflow has two ways in, and both feed one shared posting path:
 
 1. **Webhook**: Zoom calls the workflow when a meeting's summary finishes, and the recap posts about 1 hour later.
    Zoom rewrites a summary about 20 minutes after creating it, and the Gate only passes a summary that has been quiet for 15 minutes, so the 1 hour wait lets the rewrite land and the cooldown clear before the recap is fetched.
-2. **Daily sweep**: a Schedule Trigger runs each morning and posts any meeting the webhook missed.
+2. **Daily sweep**: a Schedule Trigger runs each morning and posts a meeting the webhook missed, as long as no later meeting in its series has posted yet.
    Zoom's summary webhook sometimes doesn't fire, and the sweep covers those misses.
 
 Both paths post only meetings listed in the Config table below.
-Within a series, only an occurrence that started after the newest one already posted can post; an earlier occurrence that never posted stays unposted.
-Zoom's summary list ignores its date window and returns every summary back to 2024, while the Posted table starts in August 2026, so this rule is what stops an old, never-posted occurrence from going out as a new recap.
+Within a series, only an occurrence that started after the newest one already posted can post.
+A series with nothing posted yet, such as one just added to Config, posts its newest ready occurrence.
+Zoom's summary list ignores its date window and returns every summary back to 2024, while the Posted table starts in August 2026, so for a series that has posted, this rule is what stops an old, never-posted occurrence from going out as a new recap.
 
 ### Data tables
 

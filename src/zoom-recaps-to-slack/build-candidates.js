@@ -1,5 +1,6 @@
 // Pick the one meeting to post this run: the newest UNPOSTED occurrence from the last 48 hours of any
-// configured meeting (on a webhook run, the triggering occurrence only) whose summary is ready to post (see readyToPost). An occurrence with nothing to post - a room started
+// configured meeting (on a webhook run, the triggering occurrence only) whose summary is ready to post
+// (see readyToPost). An occurrence with nothing to post - a room started
 // and stopped in seconds, a summary Zoom never generated, a failed fetch - is skipped, never allowed to
 // block the occurrences behind it. Calendar guardrail: a meeting headed for a PUBLIC channel
 // must match a scheduled public-calendar event (same Zoom meeting id + weekday/time) - this stops a
@@ -54,14 +55,14 @@ const triggerUuid = trigger && trigger.meetingUuid ? String(trigger.meetingUuid)
 
 // Zoom's summaries list ignores the date window and returns back to 2024, so only a meeting that
 // started within the last 48 hours is ever a candidate: an older unposted one is history, not news.
-const MAX_AGE_MS = 48 * 60 * 60 * 1000;
+const cutoff = Date.now() - 48 * 60 * 60 * 1000;
 // Every recent unposted occurrence of a configured meeting, newest first. A webhook run considers only
 // the exact occurrence that fired it - if that one is already posted or not ready, the run ends with
 // nothing rather than falling back to another occurrence.
 const eligible = all
-  .filter(s => Date.now() - new Date(s.meeting_start_time).getTime() <= MAX_AGE_MS)
+  .filter(s => new Date(s.meeting_start_time).getTime() >= cutoff)
   .filter(s => config[String(s.meeting_id)] && !posted.has(s.meeting_uuid))
-  .filter(s => !triggerId || (String(s.meeting_id) === triggerId && s.meeting_uuid === triggerUuid))
+  .filter(s => !triggerId || (String(s.meeting_id) === triggerId && (!triggerUuid || s.meeting_uuid === triggerUuid)))
   .sort((a, b) => new Date(b.meeting_start_time) - new Date(a.meeting_start_time));
 
 // Same test as the Gate (content present, summary not still being refined), asked here so an

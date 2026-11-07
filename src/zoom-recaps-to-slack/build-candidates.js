@@ -1,5 +1,5 @@
 // Pick the one meeting to post this run: the newest UNPOSTED occurrence of any configured meeting
-// (on a webhook run, of the triggering meeting only) whose summary is ready to post (see readyToPost). An occurrence with nothing to post - a room started
+// (on a webhook run, of the triggering meeting only), newer than its series' latest posted occurrence, whose summary is ready to post (see readyToPost). An occurrence with nothing to post - a room started
 // and stopped in seconds, a summary Zoom never generated, a failed fetch - is skipped, never allowed to
 // block the occurrences behind it. Calendar guardrail: a meeting headed for a PUBLIC channel
 // must match a scheduled public-calendar event (same Zoom meeting id + weekday/time) - this stops a
@@ -52,9 +52,19 @@ try { trigger = $('Verify Zoom').first().json; } catch (e) { trigger = null; }
 const triggerId = trigger && trigger.meetingId ? String(trigger.meetingId) : '';
 const triggerUuid = trigger && trigger.meetingUuid ? String(trigger.meetingUuid) : '';
 
-// Every unposted occurrence of a configured meeting, newest first.
+// The start of each meeting series' newest posted occurrence. Only a later occurrence can post;
+// "How It Works" in nodes/ZOOM_RECAPS_TO_SLACK.md gives the reason.
+const latestPosted = {};
+for (const s of all) {
+  if (!posted.has(s.meeting_uuid)) continue;
+  const id = String(s.meeting_id), t = new Date(s.meeting_start_time).getTime();
+  if (!(latestPosted[id] >= t)) latestPosted[id] = t;
+}
+
+// Every unposted occurrence of a configured meeting newer than its series' latest post, newest first.
 let eligible = all
-  .filter(s => config[String(s.meeting_id)] && !posted.has(s.meeting_uuid))
+  .filter(s => config[String(s.meeting_id)] && !posted.has(s.meeting_uuid)
+    && !(new Date(s.meeting_start_time).getTime() <= latestPosted[String(s.meeting_id)]))
   .filter(s => !triggerId || String(s.meeting_id) === triggerId)
   .sort((a, b) => new Date(b.meeting_start_time) - new Date(a.meeting_start_time));
 // Prefer the exact occurrence that triggered the webhook; if the list doesn't show it yet, fall back to

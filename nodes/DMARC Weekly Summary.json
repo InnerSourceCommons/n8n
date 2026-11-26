@@ -26,7 +26,7 @@
         "returnAll": true,
         "simple": false,
         "filters": {
-          "q": "to:dmarc-reports@innersourcecommons.org",
+          "q": "to:dmarc-reports@innersourcecommons.org -in:trash",
           "includeSpamTrash": true,
           "receivedAfter": "={{ $now.startOf('day').minus({ days: 7 }).toISO() }}",
           "receivedBefore": "={{ $now.startOf('day').toISO() }}"

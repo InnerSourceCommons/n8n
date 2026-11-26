@@ -8,7 +8,7 @@ Each Monday the workflow reads the reports received over the 7 days before that 
 
 | Column | Meaning |
 | --- | --- |
-| Sender | The service that sent the mail, named in the order the comment at the top of `summarize-reports.js` gives. Mail it can't name shows as its server's IP address, as `server <IP> (in our SPF record)` or `unknown server <IP>`. |
+| Sender | The service that sent the mail, named by the rules in the comment at the top of `summarize-reports.js`. |
 | Messages | How many messages the providers saw from that sender. |
 | Proved it's us | "yes" when DMARC passed every message, "no" when it passed none, and "partly" with the counts otherwise. |
 | What we'd do | "nothing" for a sender that proved it's us, and "check it" for any other. |

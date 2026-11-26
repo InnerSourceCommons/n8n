@@ -52,7 +52,7 @@ function addReport(xml) {
   if (!tag(xml, 'report_id')) unreadable++;
   if (!tag(xml, 'report_id') || seen.has(id)) return;
   seen.add(id);
-  reporters.add(tag(xml, 'org_name'));
+  if (tag(xml, 'org_name')) reporters.add(tag(xml, 'org_name'));
   for (const record of all(xml, 'record')) {
     const count = Number(tag(record, 'count')) || 0;
     const policy = tag(record, 'policy_evaluated');
@@ -67,7 +67,7 @@ function addReport(xml) {
 
 const items = $input.all();
 for (let i = 0; i < items.length; i++) {
-  // Unzip Reports passes on an attachment it couldn't unzip as an item carrying only json.error.
+  // json.error marks an attachment Split Attachments skipped or Unzip Reports couldn't unzip.
   if (items[i].json.error) unreadable++;
   if (items[i].json.xml) addReport(items[i].json.xml);
   for (const key of Object.keys(items[i].binary || {})) {

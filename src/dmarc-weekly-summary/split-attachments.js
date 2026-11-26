@@ -14,10 +14,10 @@ for (let i = 0; i < items.length; i++) {
   for (const [key, bin] of Object.entries(items[i].binary || {})) {
     const name = String(bin.fileName || '').toLowerCase();
     if (/\.(zip|gz|gzip)$/.test(name)) {
-      out.push({ json: { fileName: bin.fileName }, binary: { data: bin } });
+      out.push({ json: {}, binary: { data: bin } });
     } else if (name.endsWith('.xml')) {
       const xml = (await this.helpers.getBinaryDataBuffer(i, key)).toString('utf8');
-      out.push({ json: { fileName: bin.fileName, xml }, binary: { data: await emptyZip() } });
+      out.push({ json: { xml }, binary: { data: await emptyZip() } });
     }
   }
 }

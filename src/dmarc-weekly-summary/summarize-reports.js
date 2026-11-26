@@ -11,48 +11,37 @@ const KNOWN_SENDERS = [
 // Mail signed with our own domain's key is told apart by the DKIM selector that signed it.
 const OWN_SELECTORS = { google: 'Google Workspace', k1: 'Mailchimp', k2: 'Mailchimp', k3: 'Mailchimp' };
 
-const tag = (xml, name) => {
-  const m = xml.match(new RegExp(`<${name}>\\s*([\\s\\S]*?)\\s*</${name}>`));
-  return m ? m[1] : '';
-};
-const all = (xml, name) => [...xml.matchAll(new RegExp(`<${name}>([\\s\\S]*?)</${name}>`, 'g'))].map((m) => m[1]);
+// Tags may carry attributes or a namespace prefix, as in <dmarc:record xml:lang="en">.
+const pattern = (name, flags) => new RegExp(`<(?:\\w+:)?${name}(?:\\s[^>]*)?>([\\s\\S]*?)</(?:\\w+:)?${name}>`, flags);
+const tag = (xml, name) => (xml.match(pattern(name)) || ['', ''])[1].trim();
+const all = (xml, name) => [...xml.matchAll(pattern(name, 'g'))].map((m) => m[1]);
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const known = (domain) => (KNOWN_SENDERS.find(([re]) => re.test(domain)) || [])[1];
 
 function senderOf(record) {
   const auth = tag(record, 'auth_results');
   const dkim = all(auth, 'dkim').map((d) => ({ domain: tag(d, 'domain').toLowerCase(), selector: tag(d, 'selector').toLowerCase() }));
-  const spf = all(auth, 'spf').map((s) => tag(s, 'domain').toLowerCase());
-  for (const d of dkim) {
-    if (d.domain === DOMAIN) {
-      if (OWN_SELECTORS[d.selector]) return OWN_SELECTORS[d.selector];
-      continue;
-    }
-    const known = KNOWN_SENDERS.find(([re]) => re.test(d.domain));
-    return known ? known[1] : d.domain;
-  }
-  for (const domain of spf) {
-    const known = KNOWN_SENDERS.find(([re]) => re.test(domain));
-    if (known) return known[1];
-  }
-  if (dkim.length) return `${DOMAIN} (DKIM selector ${dkim[0].selector || 'unknown'})`;
-  return spf[0] && spf[0] !== DOMAIN ? spf[0] : `unknown server ${tag(record, 'source_ip')}`;
-}
+  const spf = all(auth, 'spf').map((s) => ({ domain: tag(s, 'domain').toLowerCase(), result: tag(s, 'result') }));
+  const ip = tag(record, 'source_ip');
 
-const texts = [];
-const items = $input.all();
-for (let i = 0; i < items.length; i++) {
-  if (items[i].json.xml) texts.push(items[i].json.xml);
-  for (const key of Object.keys(items[i].binary || {})) {
-    texts.push((await this.helpers.getBinaryDataBuffer(i, key)).toString('utf8'));
-  }
+  const own = dkim.find((d) => d.domain === DOMAIN && OWN_SELECTORS[d.selector]);
+  if (own) return OWN_SELECTORS[own.selector];
+  const foreign = dkim.find((d) => d.domain !== DOMAIN);
+  if (foreign) return known(foreign.domain) || foreign.domain;
+  const spfKnown = spf.map((s) => known(s.domain)).find(Boolean);
+  if (spfKnown) return spfKnown;
+  if (dkim.length) return `${DOMAIN} (DKIM selector ${dkim[0].selector || 'unknown'})`;
+  const other = spf.find((s) => s.domain !== DOMAIN);
+  if (other) return other.domain;
+  return spf.some((s) => s.result === 'pass') ? `server ${ip} (in our SPF record)` : `unknown server ${ip}`;
 }
 
 const seen = new Set();
 const senders = new Map();
 const reporters = new Set();
-for (const xml of texts) {
+function addReport(xml) {
   const id = `${tag(xml, 'org_name')}|${tag(xml, 'report_id')}`;
-  if (!tag(xml, 'report_id') || seen.has(id)) continue;
+  if (!tag(xml, 'report_id') || seen.has(id)) return;
   seen.add(id);
   reporters.add(tag(xml, 'org_name'));
   for (const record of all(xml, 'record')) {
@@ -67,17 +56,28 @@ for (const xml of texts) {
   }
 }
 
+const items = $input.all();
+for (let i = 0; i < items.length; i++) {
+  if (items[i].json.xml) addReport(items[i].json.xml);
+  for (const key of Object.keys(items[i].binary || {})) {
+    addReport((await this.helpers.getBinaryDataBuffer(i, key)).toString('utf8'));
+  }
+}
+
 const rows = [...senders.values()].sort((a, b) => b.messages - a.messages);
-const proved = (s) => (s.passed === s.messages ? 'yes' : s.passed === 0 ? 'no' : `partly (${s.passed.toLocaleString('en-US')} of ${s.messages.toLocaleString('en-US')})`);
+const n = (x) => x.toLocaleString('en-US');
+const proved = (s) => (s.passed === s.messages ? 'yes' : s.passed === 0 ? 'no' : `partly (${n(s.passed)} of ${n(s.messages)})`);
 const cell = 'style="border:1px solid #ccc;padding:4px 8px;text-align:left"';
 const table = `<table style="border-collapse:collapse">
 <tr>${['Sender', 'Messages', "Proved it's us", "What we'd do"].map((h) => `<th ${cell}>${h}</th>`).join('')}</tr>
-${rows.map((s) => `<tr><td ${cell}>${esc(s.name)}</td><td ${cell}>${s.messages.toLocaleString('en-US')}</td><td ${cell}>${proved(s)}</td><td ${cell}>${s.passed === s.messages ? 'nothing' : 'check it'}</td></tr>`).join('\n')}
+${rows.map((s) => `<tr><td ${cell}>${esc(s.name)}</td><td ${cell}>${n(s.messages)}</td><td ${cell}>${proved(s)}</td><td ${cell}>${s.passed === s.messages ? 'nothing' : 'check it'}</td></tr>`).join('\n')}
 </table>`;
 
-const week = `${$now.minus({ days: 7 }).toFormat('LLL d')} - ${$now.minus({ days: 1 }).toFormat('LLL d, yyyy')}`;
+// Get Reports reads mail received over the 7 whole days before today.
+const today = $now.startOf('day');
+const week = `${today.minus({ days: 7 }).toFormat('LLL d')} - ${today.minus({ days: 1 }).toFormat('LLL d, yyyy')}`;
 const html = seen.size
-  ? `<p>Who sent mail as ${DOMAIN}, ${week}, from ${seen.size} reports by ${[...reporters].sort().map(esc).join(', ')}.</p>\n${table}`
-  : `<p>No DMARC reports arrived for ${DOMAIN}, ${week}.</p>\n<p>Check that the DMARC record still has <code>rua=mailto:dmarc-reports@${DOMAIN}</code>, and that mail to that address reaches the mailbox this workflow reads.</p>`;
+  ? `<p>Who sent mail as ${DOMAIN}, from ${seen.size} reports received ${week}, by ${[...reporters].sort().map(esc).join(', ')}.</p>\n${table}`
+  : `<p>No DMARC reports for ${DOMAIN} arrived ${week}.</p>\n<p>Check that the DMARC record still has <code>rua=mailto:dmarc-reports@${DOMAIN}</code>, and that mail to that address reaches the mailbox this workflow reads.</p>`;
 
 return [{ json: { subject: `DMARC weekly summary for ${DOMAIN}: ${week}`, html } }];

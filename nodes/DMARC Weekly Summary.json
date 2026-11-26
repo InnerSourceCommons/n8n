@@ -27,7 +27,9 @@
         "simple": false,
         "filters": {
           "q": "to:dmarc-reports@innersourcecommons.org",
-          "receivedAfter": "={{ $now.minus({ days: 7 }).toISO() }}"
+          "includeSpamTrash": true,
+          "receivedAfter": "={{ $now.startOf('day').minus({ days: 7 }).toISO() }}",
+          "receivedBefore": "={{ $now.startOf('day').toISO() }}"
         },
         "options": {
           "downloadAttachments": true,
@@ -60,7 +62,8 @@
       "type": "n8n-nodes-base.compression",
       "typeVersion": 1.1,
       "position": [660, 0],
-      "id": "6a0d6c55-3f0e-4c8e-9a51-1b7c2f0d9e04"
+      "id": "6a0d6c55-3f0e-4c8e-9a51-1b7c2f0d9e04",
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {

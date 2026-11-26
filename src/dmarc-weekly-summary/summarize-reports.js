@@ -1,7 +1,13 @@
 // Read the week's DMARC aggregate reports and build the summary email: one table row per sender.
 // A message "proved it's us" when DMARC passed it, meaning DKIM or SPF passed for our domain.
-// A sender is named by the domain that signed its mail (DKIM), or else the domain it sent from (SPF);
-// KNOWN_SENDERS turns the domains we recognize into a name, and mail with neither is grouped by server IP.
+// Only a DKIM signature or SPF check that passed names a sender, so forged mail shows as its server's IP.
+// A sender is named by the first of these that its mail has:
+// 1. a DKIM signature from our own domain with a selector OWN_SELECTORS lists, named by that list;
+// 2. a DKIM signature from another domain, named by KNOWN_SENDERS or else shown as that domain;
+// 3. an SPF domain KNOWN_SENDERS names;
+// 4. a DKIM signature from our own domain with an unlisted selector, shown with that selector;
+// 5. an SPF domain other than ours, shown as that domain;
+// 6. otherwise its server's IP address, marked "in our SPF record" when SPF passed for our own domain.
 const DOMAIN = 'innersourcecommons.org';
 const KNOWN_SENDERS = [
   [/(^|\.)(google\.com|gappssmtp\.com)$/, 'Google Workspace'],
@@ -20,27 +26,30 @@ const known = (domain) => (KNOWN_SENDERS.find(([re]) => re.test(domain)) || [])[
 
 function senderOf(record) {
   const auth = tag(record, 'auth_results');
-  const dkim = all(auth, 'dkim').map((d) => ({ domain: tag(d, 'domain').toLowerCase(), selector: tag(d, 'selector').toLowerCase() }));
-  const spf = all(auth, 'spf').map((s) => ({ domain: tag(s, 'domain').toLowerCase(), result: tag(s, 'result') }));
+  const passing = (name) => all(auth, name).filter((x) => tag(x, 'result') === 'pass');
+  const dkim = passing('dkim').map((d) => ({ domain: tag(d, 'domain').toLowerCase(), selector: tag(d, 'selector').toLowerCase() }));
+  const spf = passing('spf').map((s) => tag(s, 'domain').toLowerCase());
   const ip = tag(record, 'source_ip');
 
   const own = dkim.find((d) => d.domain === DOMAIN && OWN_SELECTORS[d.selector]);
   if (own) return OWN_SELECTORS[own.selector];
   const foreign = dkim.find((d) => d.domain !== DOMAIN);
   if (foreign) return known(foreign.domain) || foreign.domain;
-  const spfKnown = spf.map((s) => known(s.domain)).find(Boolean);
+  const spfKnown = spf.map(known).find(Boolean);
   if (spfKnown) return spfKnown;
   if (dkim.length) return `${DOMAIN} (DKIM selector ${dkim[0].selector || 'unknown'})`;
-  const other = spf.find((s) => s.domain !== DOMAIN);
-  if (other) return other.domain;
-  return spf.some((s) => s.result === 'pass') ? `server ${ip} (in our SPF record)` : `unknown server ${ip}`;
+  const other = spf.find((d) => d !== DOMAIN);
+  if (other) return other;
+  return spf.length ? `server ${ip} (in our SPF record)` : `unknown server ${ip}`;
 }
 
 const seen = new Set();
 const senders = new Map();
 const reporters = new Set();
+let unreadable = 0;
 function addReport(xml) {
   const id = `${tag(xml, 'org_name')}|${tag(xml, 'report_id')}`;
+  if (!tag(xml, 'report_id')) unreadable++;
   if (!tag(xml, 'report_id') || seen.has(id)) return;
   seen.add(id);
   reporters.add(tag(xml, 'org_name'));
@@ -58,6 +67,8 @@ function addReport(xml) {
 
 const items = $input.all();
 for (let i = 0; i < items.length; i++) {
+  // Unzip Reports passes on an attachment it couldn't unzip as an item carrying only json.error.
+  if (items[i].json.error) unreadable++;
   if (items[i].json.xml) addReport(items[i].json.xml);
   for (const key of Object.keys(items[i].binary || {})) {
     addReport((await this.helpers.getBinaryDataBuffer(i, key)).toString('utf8'));
@@ -76,8 +87,11 @@ ${rows.map((s) => `<tr><td ${cell}>${esc(s.name)}</td><td ${cell}>${n(s.messages
 // Get Reports reads mail received over the 7 whole days before today.
 const today = $now.startOf('day');
 const week = `${today.minus({ days: 7 }).toFormat('LLL d')} - ${today.minus({ days: 1 }).toFormat('LLL d, yyyy')}`;
+const unreadNote = unreadable ? `\n<p>Attachments received ${week} that couldn't be read as DMARC reports, left out: ${unreadable}.</p>` : '';
 const html = seen.size
-  ? `<p>Who sent mail as ${DOMAIN}, from ${seen.size} reports received ${week}, by ${[...reporters].sort().map(esc).join(', ')}.</p>\n${table}`
-  : `<p>No DMARC reports for ${DOMAIN} arrived ${week}.</p>\n<p>Check that the DMARC record still has <code>rua=mailto:dmarc-reports@${DOMAIN}</code>, and that mail to that address reaches the mailbox this workflow reads.</p>`;
+  ? `<p>Who sent mail as ${DOMAIN}, from ${seen.size} reports received ${week}, by ${[...reporters].sort().map(esc).join(', ')}.</p>\n${table}${unreadNote}`
+  : unreadable
+    ? `<p>No DMARC reports for ${DOMAIN} could be read ${week}.</p>${unreadNote}`
+    : `<p>No DMARC reports for ${DOMAIN} arrived ${week}.</p>\n<p>Check that the DMARC record still has <code>rua=mailto:dmarc-reports@${DOMAIN}</code>, and that mail to that address reaches the mailbox this workflow reads.</p>`;
 
 return [{ json: { subject: `DMARC weekly summary for ${DOMAIN}: ${week}`, html } }];

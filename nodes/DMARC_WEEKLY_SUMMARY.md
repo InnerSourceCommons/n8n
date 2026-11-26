@@ -8,12 +8,13 @@ Each Monday the workflow reads the reports received over the 7 days before that 
 
 | Column | Meaning |
 | --- | --- |
-| Sender | The service that sent the mail, named from the domain that signed it (DKIM), or else the domain it sent from (SPF). Mail that only passed SPF for our own domain shows as "server" and its IP address, "in our SPF record". Any other mail shows as "unknown server" and its IP address. |
+| Sender | The service that sent the mail, named in the order the comment at the top of `summarize-reports.js` gives. Mail it can't name shows as its server's IP address, as `server <IP> (in our SPF record)` or `unknown server <IP>`. |
 | Messages | How many messages the providers saw from that sender. |
 | Proved it's us | "yes" when DMARC passed every message, "no" when it passed none, and "partly" with the counts otherwise. |
 | What we'd do | "nothing" for a sender that proved it's us, and "check it" for any other. |
 
-A report that arrives twice is counted once, and an attachment that won't unzip is left out.
+A report that arrives twice is counted once.
+An attachment that won't unzip or isn't a DMARC report is left out, and the email says how many were.
 A week with no reports still sends an email, saying no reports arrived, so a broken report address shows up within a week.
 
 `summarize-reports.js` names each sender it finds in its `KNOWN_SENDERS` and `OWN_SELECTORS` lists.

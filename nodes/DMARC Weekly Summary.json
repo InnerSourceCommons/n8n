@@ -1,0 +1,113 @@
+{
+  "id": "ThLQnh6ZL9NVQg50",
+  "name": "DMARC Weekly Summary",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [1],
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "name": "Every Monday",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 0],
+      "id": "6a0d6c55-3f0e-4c8e-9a51-1b7c2f0d9e01"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "returnAll": true,
+        "simple": false,
+        "filters": {
+          "q": "to:dmarc-reports@innersourcecommons.org",
+          "receivedAfter": "={{ $now.minus({ days: 7 }).toISO() }}"
+        },
+        "options": {
+          "downloadAttachments": true,
+          "dataPropertyAttachmentsPrefixName": "attachment_"
+        }
+      },
+      "name": "Get Reports",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [220, 0],
+      "id": "6a0d6c55-3f0e-4c8e-9a51-1b7c2f0d9e02",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Code comes from src/dmarc-weekly-summary/split-attachments.js at build time."
+      },
+      "name": "Split Attachments",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 0],
+      "id": "6a0d6c55-3f0e-4c8e-9a51-1b7c2f0d9e03"
+    },
+    {
+      "parameters": {
+        "binaryPropertyName": "data",
+        "outputPrefix": "file_"
+      },
+      "name": "Unzip Reports",
+      "type": "n8n-nodes-base.compression",
+      "typeVersion": 1.1,
+      "position": [660, 0],
+      "id": "6a0d6c55-3f0e-4c8e-9a51-1b7c2f0d9e04"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Code comes from src/dmarc-weekly-summary/summarize-reports.js at build time."
+      },
+      "name": "Summarize Reports",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [880, 0],
+      "id": "6a0d6c55-3f0e-4c8e-9a51-1b7c2f0d9e05"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "sendTo": "dmarc@innersourcecommons.org",
+        "subject": "={{ $json.subject }}",
+        "emailType": "html",
+        "message": "={{ $json.html }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "name": "Email Summary",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [1100, 0],
+      "id": "6a0d6c55-3f0e-4c8e-9a51-1b7c2f0d9e06"
+    }
+  ],
+  "connections": {
+    "Every Monday": {
+      "main": [[{ "node": "Get Reports", "type": "main", "index": 0 }]]
+    },
+    "Get Reports": {
+      "main": [[{ "node": "Split Attachments", "type": "main", "index": 0 }]]
+    },
+    "Split Attachments": {
+      "main": [[{ "node": "Unzip Reports", "type": "main", "index": 0 }]]
+    },
+    "Unzip Reports": {
+      "main": [[{ "node": "Summarize Reports", "type": "main", "index": 0 }]]
+    },
+    "Summarize Reports": {
+      "main": [[{ "node": "Email Summary", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
